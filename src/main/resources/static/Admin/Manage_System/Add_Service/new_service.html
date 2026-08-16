@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Προσθήκη νέας Υπηρεσίας</title>
+    <link rel="stylesheet" href="new_service.css">
+</head>
+<header>
+    <h1>Γυμναστήριο Kappa</h1>
+</header>
+<body>
+    <h2>Προσθήκη νέας Υπηρεσίας</h2>
+    <div id="navigation_bar"></div>
+    <div id="add_service">
+        <form id="add" method="post" action="">
+            <label for="name">Όνομα:</label>
+            <input type="text" id="name" name="name" required>
+            <label for="description">Περιγραφή:</label>
+            <input type="text" id="description" name="description" required>
+            <label for="price">Τιμή:</label>
+            <input type="number" id="price" name="price" required>
+            <label for="max_people">Μέγιστος αριθμός ατόμων:</label>
+            <input type="number" id="max_people" name="max_people" required>
+            <label for="image">Εικόνα:</label>
+            <input type="file" id="image" name="image" accept="image/*" required>
+            <button type="submit">Προσθήκη Υπηρεσίας</button>
+        </form>
+    </div>
+    <script src="../../../navigation_bar.js"></script>
+    <script src="new_service.js"></script>
+</body>
+</html>

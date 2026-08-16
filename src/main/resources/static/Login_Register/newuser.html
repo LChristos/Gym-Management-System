@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Login/Register</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <header>
+        <h1>Γυμναστήριο Kappa</h1>
+        <div id="navigation_bar"></div>
+    </header>
+	<div class="frame">
+        <div id="form_login">
+            <p>Δεν έχετε Λογαριασμό; <a href="#" id="show_register">Εγγραφείτε εδώ</a></p><br/>
+            <h2>Σύνδεση</h2>
+            <form id="login" method="post" action="">
+                <label for="login_username">Username</label>
+                <input type="text" id="login_username" name="username" required>
+                <label for="login_password">Password</label>
+                <input type="text" id="login_password" name="password" required>
+                <button type="submit">Σύνδεση</button>
+            </form>
+        </div>
+
+		<div id="form_register" style="display: none">
+            <p>Έχετε ήδη λογαριασμό; <a href="#" id="show_login">Συνδεθείτε εδώ</a> </p><br/>
+            <h2>Εγγραφή</h2>
+            <form id="register" method="post" action="/api/signup">
+                <label for="name">Όνομα:</label>
+                <input type="text" id="name" name="name" required>
+                <label for="surname">Επώνυμο:</label>
+                <input type="text" id="surname" name="surname" required>
+                <label for="country">Χώρα:</label>
+                <select id="country" required>
+                    <option value="">Choose Country</option>
+                </select>
+                <label for="town">Πόλη:</label>
+                <select id="town" required >
+                    <option value="">Choose Town</option>
+                </select>
+                <label for="address">Διεύθυνση:</label>
+                <input type="text" id="address" name="address" required>
+                <label for="email">E-mail:</label>
+                <input type="email" id="email" name="email" required>
+                <label for="register_username">Όνομα χρήστη:</label>
+                <input type="text" id="register_username" name="username" required>
+                <label for="register_password">Κωδικός Πρόσβασης:</label>
+                <input type="password" id="register_password" name="password" required>
+                <button type="submit" >Εγγραφή</button>
+            </form>
+		</div>
+	</div>
+    <script src="../navigation_bar.js"></script>
+    <script src="login.js"></script>
+
+</body>
+</html>

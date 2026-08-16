@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Αιτήματα Εγγραφών</title>
+    <link rel="stylesheet" href="new_program.css">
+</head>
+<header>
+    <h1>Γυμναστήριο Kappa</h1>
+</header>
+<body>
+    <h2>Προσθήκη στο Προγραμμα</h2>
+    <div id="navigation_bar"></div>
+    <div id="add_service">
+        <form id="add" method="post" action="">
+            <label for="name">Όνομα Υπηρεσίας:</label>
+            <select id="name" required>
+                <option value="">Επιλογή Υπηρεσίας</option>
+            </select>
+            <label for="programdate">Ημερομηνία:</label>
+            <input type="date" id="programdate" name="programdate" required>
+            <label for="hour">Ώρα:</label>
+            <input type="time" id="hour" name="hour" required>
+            <label for="trainer">Γυμναστής</label>
+            <select id="trainer" required>
+                <option value="">Επιλογή Γυμναστή</option>
+            </select>
+            <label for="max_people">Μέγιστος αριθμός ατόμων:</label>
+            <input type="number" id="max_people" name="max_people" required>
+            <button type="submit">Προσθήκη στο Προγραμμα</button>
+
+        </form>
+    </div>
+    <script src="new_program.js"></script>
+    <script src="../../../navigation_bar.js"></script>
+</body>
+</html>
