@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         trainer_name = trainer.name + " " + trainer.surname;
                                     }
                                 });
-                                let date = new Date(program.programdate).toLocaleDateString();
+                                let date = new Date(program.programdate + 'T00:00:00').toLocaleDateString();
                                 program_div += `
                                     <div class="program_item">
                                         <strong>${date}</strong> at <strong>${program.hour}</strong>

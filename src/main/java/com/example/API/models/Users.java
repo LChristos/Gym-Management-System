@@ -1,13 +1,13 @@
 package com.example.API.models;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
 
-@Document(collection = "users")
+@Entity
+@Table(name = "users")
 public class Users {
-//When i use a SET i need to update also the collection
+//When i use a SET i need to update also the table
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
 
     private String name;
     private String surname;
@@ -16,13 +16,14 @@ public class Users {
     private String address;
     private String email;
 
-    @Indexed(unique = true)
+    @Column(name = "username", unique = true)
     private String username;
-
 
     private String password;
     private String role;
     private boolean accepted=false;
+
+    public Users() {}
 
     public Users(String name, String surname, String country, String town, String address, String email, String username, String password) {
         this.name = name;
@@ -33,14 +34,14 @@ public class Users {
         this.email = email;
         this.username = username;
         this.password = password;
-        //also create in the collection
+        //also create in the table
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

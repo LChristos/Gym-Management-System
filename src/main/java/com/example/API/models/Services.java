@@ -1,24 +1,22 @@
 package com.example.API.models;
 
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
 
-import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-@Document(collection = "services")
+@Entity
+@Table(name = "service")
 public class Services {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
 
     private String name;
     private String description;
     private int price;
     private int max_people;
     private String url_image;
+
+    public Services() {}
 
     public Services(String name , String description , int price , int max_people , String url_image) {
         this.name = name;
@@ -28,11 +26,11 @@ public class Services {
         this.url_image = url_image;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -66,6 +64,10 @@ public class Services {
 
     public void setMax_people(int max_people) {
         this.max_people = max_people;
+    }
+
+    public void setUrl_image(String url_image) {
+        this.url_image = url_image;
     }
 
     public String getUrl_image() {

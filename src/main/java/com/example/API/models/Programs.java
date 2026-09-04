@@ -1,55 +1,68 @@
 package com.example.API.models;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Date;
-@Document(collection = "program")
+
+@Entity
+@Table(name = "program")
 public class Programs {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
 
-    private String services_name;
+    // FK -> service.id  (was: private String services_name;)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_id", nullable = false)
+    private Services service;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private Date programdate;
+    @Column(name = "programdate")
+    private LocalDate programdate;
 
     private LocalTime hour;
-    private String trainer_id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "trainer_id" , nullable = false)
+    private Trainers trainer;
+
     private int max_people;
     private int peoplereserve=0;
 
-    public Programs(String services_name, Date programdate, LocalTime hour, String trainer_id, int max_people) {
-        this.services_name = services_name;
+    public Programs() {}
+
+    public Programs(Services service, LocalDate programdate, LocalTime hour, Trainers trainer, int max_people) {
+        this.service = service;
         this.programdate = programdate;
         this.hour = hour;
-        this.trainer_id = trainer_id;
+        this.trainer = trainer;
         this.max_people = max_people;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public String getServices_name() {
-        return services_name;
+    public Services getService() {
+        return service;
     }
 
-    public void setServices_name(String services_name) {
-        this.services_name = services_name;
+    public void setService(Services service) {
+        this.service = service;
     }
 
-    public Date getProgramdate() {
+    public LocalDate getProgramdate() {
         return programdate;
     }
 
-    public void setProgramdate(Date programdate) {
+    public void setProgramdate(LocalDate programdate) {
         this.programdate = programdate;
     }
 
@@ -61,12 +74,12 @@ public class Programs {
         this.hour = hour;
     }
 
-    public String getTrainer_id() {
-        return trainer_id;
+    public Trainers getTrainer() {
+        return trainer;
     }
 
-    public void setTrainer_id(String trainer_id) {
-        this.trainer_id = trainer_id;
+    public void setTrainer(Trainers trainer) {
+        this.trainer = trainer;
     }
 
     public int getMax_people() {

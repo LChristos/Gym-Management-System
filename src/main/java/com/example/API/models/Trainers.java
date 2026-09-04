@@ -1,22 +1,29 @@
 package com.example.API.models;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
 
-@Document(collection = "trainers")
+@Entity
+@Table(name = "trainers")
 public class Trainers {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
 
     private String name;
     private String surname;
+
+    public Trainers() {}
 
     public Trainers(String name , String surname){
         this.name = name;
         this.surname = surname;
     }
 
-    public String getId() {
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getId() {
         return id;
     }
 

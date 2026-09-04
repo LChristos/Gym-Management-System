@@ -3,23 +3,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.io.IOException;
 
+import com.example.API.dto.ProgramDTO;
+import com.example.API.dto.ReservationDTO;
 import com.example.API.models.*;
 import com.example.API.Repositories.*;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -49,8 +48,41 @@ public class UsersController {
     @Autowired
     private ReservationsRepository reservationsRepository;
 
-    @Autowired
-    private MongoTemplate MongoTemplate;
+    // ---------- DTO <-> Entity mapping helpers (Programs) ----------
+
+    private ProgramDTO toProgramDTO(Programs p) {
+        ProgramDTO dto = new ProgramDTO();
+        dto.setId(p.getId());
+        dto.setServices_name(p.getService() != null ? p.getService().getId() : null);
+        dto.setProgramdate(p.getProgramdate());
+        dto.setHour(p.getHour());
+        dto.setTrainer_id(p.getTrainer() != null ? p.getTrainer().getId() : null);
+        dto.setMax_people(p.getMax_people());
+        dto.setPeoplereserve(p.getPeoplereserve());
+        return dto;
+    }
+
+    private List<ProgramDTO> toProgramDTOList(List<Programs> programs) {
+        return programs.stream().map(this::toProgramDTO).collect(Collectors.toList());
+    }
+
+    private Programs newProgramFromDTO(ProgramDTO dto) {
+        Services service = ServicesRepository.findById(dto.getServices_name()).orElseThrow(() ->
+                new NoSuchElementException("Service not found with id: " + dto.getServices_name()));
+        Trainers trainer = trainersRepository.findById(dto.getTrainer_id()).orElseThrow(() ->
+                new NoSuchElementException("Trainer not found with id: " + dto.getTrainer_id()));
+        return new Programs(service, dto.getProgramdate(), dto.getHour(), trainer, dto.getMax_people());
+    }
+
+    // ---------- DTO <-> Entity mapping helper (Reservations) ----------
+
+    private UserReservations newReservationFromDTO(ReservationDTO dto) {
+        Programs program = ProgramsRepository.findById(dto.getProgramid()).orElseThrow(() ->
+                new NoSuchElementException("Program not found with id: " + dto.getProgramid()));
+        Users user = UsersRepository.findById(dto.getUserid()).orElseThrow(() ->
+                new NoSuchElementException("User not found with id: " + dto.getUserid()));
+        return new UserReservations(program, user);
+    }
 
     @PostMapping("/logout")
     public ResponseEntity<String> Logout(HttpServletResponse response){
@@ -64,7 +96,7 @@ public class UsersController {
     }
 
 
-    @PostMapping("/signup")//save the user in collection
+    @PostMapping("/signup")//save the user in table
     public ResponseEntity<String> newUser(@RequestBody Users user){
         try{
             String username = user.getUsername();
@@ -105,15 +137,15 @@ public class UsersController {
             return new ResponseEntity<>("Δεν υπάρχει τέτοιο όνομα Χρήστη" , HttpStatus.UNAUTHORIZED);
         }
     }
-//ADMIN
+    //ADMIN
     @GetMapping("/request")//Give all the users with accepted == false
     public ResponseEntity<List<Users>> NotAccepted(){
-        List<Users> user_request = UsersRepository.GetNotAccepted();
+        List<Users> user_request = UsersRepository.findByAcceptedFalse();
         return new ResponseEntity<>(user_request , HttpStatus.OK);
     }
 
     @PostMapping("/request/accepted/{id}")//Accept the user and i choose role
-    public ResponseEntity<String> AcceptUser(@PathVariable String id){
+    public ResponseEntity<String> AcceptUser(@PathVariable Long id){
         Users user = UsersRepository.findById(id).orElseThrow(() ->
                 new NoSuchElementException("User not found with id: " + id));//if the id was not found
         user.setAccepted(true);
@@ -123,15 +155,15 @@ public class UsersController {
     }
 
 
-    @DeleteMapping("/request/denied/{id}")//Delete the user from the request section and the collection
-    public ResponseEntity<String> RejectUser(@PathVariable String id){
+    @DeleteMapping("/request/denied/{id}")//Delete the user from the request section and the table
+    public ResponseEntity<String> RejectUser(@PathVariable Long id){
         UsersRepository.deleteById(id);
         return new ResponseEntity<>("User rejected and deleted successfully", HttpStatus.OK);
     }
 
     @GetMapping("/manageusers")//Show all the users that are accepted
     public ResponseEntity<List<Users>> ShowAllUsers(){
-        List<Users> all_users = UsersRepository.GetAllAccepted();
+        List<Users> all_users = UsersRepository.findByAcceptedTrue();
         return new ResponseEntity<>(all_users , HttpStatus.OK);
     }
 
@@ -152,11 +184,11 @@ public class UsersController {
     }
 
     @DeleteMapping("/manageusers/delete/{id}")//Delete the user
-    public ResponseEntity<String> DeleteUser(@PathVariable String id){
+    public ResponseEntity<String> DeleteUser(@PathVariable Long id){
         UsersRepository.deleteById(id);
         return new ResponseEntity<>("User deleted successfully" , HttpStatus.OK);
     }
-//Admin Services
+    //Admin Services
 //Trainers
     @GetMapping("/manageservices/trainers")//show all the trainers
     public ResponseEntity<List<Trainers>> ShowAllTrainers(){
@@ -165,7 +197,7 @@ public class UsersController {
     }
 
     @GetMapping("/manageservices/trainers/{id}")//show specific trainer
-    public ResponseEntity<Optional<Trainers>> ShowTrainer(@PathVariable String id){
+    public ResponseEntity<Optional<Trainers>> ShowTrainer(@PathVariable Long id){
         Optional<Trainers> trainer = trainersRepository.findById(id);
         return new ResponseEntity<>(trainer , HttpStatus.OK);
     }
@@ -196,11 +228,11 @@ public class UsersController {
     }
 
     @DeleteMapping("/manageservices/trainers/delete/{id}")//Delete trainer
-    public ResponseEntity<String> DeleteTrainer(@PathVariable String id){
+    public ResponseEntity<String> DeleteTrainer(@PathVariable Long id){
         trainersRepository.deleteById(id);
         return new ResponseEntity<>("Trainer deleted successfully" , HttpStatus.OK);
     }
-//Services
+    //Services
     @GetMapping("/manageservices/services")//Show all the gym's programms
     public ResponseEntity<List<Services>> ShowAllServices(){
         List<Services> all_services = ServicesRepository.findAll();
@@ -255,40 +287,35 @@ public class UsersController {
     }
 
     @DeleteMapping("/manageservices/services/delete/{id}")//Delete service
-    public ResponseEntity<String> DeleteService(@PathVariable String id){
+    public ResponseEntity<String> DeleteService(@PathVariable Long id){
         ServicesRepository.deleteById(id);
         return new ResponseEntity<>("Service deleted successfully" , HttpStatus.OK);
     }
-//Schedule of services
+    //Schedule of services
     @GetMapping("/manageservices/program")//Show all the programs
-    public  ResponseEntity<List<Programs>> ShowAllProgram(){
+    public  ResponseEntity<List<ProgramDTO>> ShowAllProgram(){
         List<Programs> all_program = ProgramsRepository.findAll();
-        return new ResponseEntity<>(all_program , HttpStatus.OK);
+        return new ResponseEntity<>(toProgramDTOList(all_program) , HttpStatus.OK);
     }
 
     @GetMapping("/manageservices/program/futures")//Show all the program from today and after
-    public ResponseEntity<List<Programs>> ShowFutureProgram(){
+    public ResponseEntity<List<ProgramDTO>> ShowFutureProgram(){
         LocalDate today = LocalDate.now();
-        Date todayy = Date.from(today.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        Query query = new Query();
-        query.addCriteria(Criteria.where("programdate").gte(todayy));
-        List<Programs> all_program = MongoTemplate.find(query, Programs.class);
-        return new ResponseEntity<>(all_program, HttpStatus.OK);
+        List<Programs> allFutureProgram = ProgramsRepository.findByProgramdateGreaterThanEqualOrderByProgramdateAsc(today);
+        return new ResponseEntity<>(toProgramDTOList(allFutureProgram), HttpStatus.OK);
     }
 
     @PostMapping("/manageservices/program/create")//Create new Schedule
-    public ResponseEntity<String> NewProgram(@RequestBody Programs program){
+    public ResponseEntity<String> NewProgram(@RequestBody ProgramDTO programDto){
+        Programs program = newProgramFromDTO(programDto);
         //Check if it creates conflict with some record
-        Query query = new Query();
-        query.addCriteria(Criteria.where("trainer_id").is(program.getTrainer_id()));
-        query.addCriteria(Criteria.where("programdate").is(program.getProgramdate()));
-        List<Programs> sametime_program = MongoTemplate.find(query, Programs.class);
+        List<Programs> sametime_program = ProgramsRepository.findByTrainer_IdAndProgramdate(program.getTrainer().getId(), program.getProgramdate());
         int new_time = program.getHour().toSecondOfDay() / 60;//Convert to minutes
         for (Programs current_program : sametime_program) {
             int currentprogram_minutes = current_program.getHour().toSecondOfDay() / 60;
             int dif = Math.abs(new_time - currentprogram_minutes);
             if (dif < 60) {//If it has something already
-                return new ResponseEntity<>("Ο συγκεκριμένος γυμναστής ήδη κάνει κάτι.", HttpStatus.CONFLICT);
+                return new ResponseEntity<>("The specific trainer already has something.", HttpStatus.CONFLICT);
             }
         }
         ProgramsRepository.save(program);
@@ -296,34 +323,38 @@ public class UsersController {
     }
 
     @PostMapping("/manageservices/program/change")//Change elements of the program
-    public ResponseEntity<String>  ChangeProgram(@RequestBody Programs program){
-        Programs theprogram = ProgramsRepository.findById(program.getId()).orElseThrow(() ->
-                new NoSuchElementException("Trainer not found! "));//if the id was not found
-        theprogram.setServices_name(program.getServices_name());
-        theprogram.setHour(program.getHour());
-        theprogram.setMax_people(program.getMax_people());
-        theprogram.setProgramdate(program.getProgramdate());
-        theprogram.setTrainer_id(program.getTrainer_id());
+    public ResponseEntity<String>  ChangeProgram(@RequestBody ProgramDTO programDto){
+        Programs theprogram = ProgramsRepository.findById(programDto.getId()).orElseThrow(() ->
+                new NoSuchElementException("Program not found! "));//if the id was not found
+        Services service = ServicesRepository.findById(programDto.getServices_name()).orElseThrow(() ->
+                new NoSuchElementException("Service not found with id: " + programDto.getServices_name()));
+        Trainers trainer = trainersRepository.findById(programDto.getTrainer_id()).orElseThrow(() ->
+                new NoSuchElementException("Trainer not found with id: " + programDto.getTrainer_id()));
+        theprogram.setService(service);
+        theprogram.setHour(programDto.getHour());
+        theprogram.setMax_people(programDto.getMax_people());
+        theprogram.setProgramdate(programDto.getProgramdate());
+        theprogram.setTrainer(trainer);
         ProgramsRepository.save(theprogram);
         return new ResponseEntity<>("Program successfully updated" , HttpStatus.OK);
     }
 
     @DeleteMapping("/manageservices/program/delete/{id}")//Delete specific part of the program
-    public ResponseEntity<String> DeleteProgram(@PathVariable("id") String id){
+    public ResponseEntity<String> DeleteProgram(@PathVariable("id") Long id){
         ProgramsRepository.deleteById(id);
         return new ResponseEntity<>("the specific schedule deleted successfully" , HttpStatus.OK);
     }
-//Announcements and Discounts
+    //Announcements and Discounts
     @GetMapping("/managearticles")//Show all the articles and the discounts
     public ResponseEntity<List<Articles>> ShowAllArticles(){//to be sorted by when they created (as bonus)
         List<Articles> all_articles = ArticlesRepository.findAll();
         return new ResponseEntity<>(all_articles , HttpStatus.OK);
     }
 
-    @GetMapping("/managearticles/{id}")//Show all the articles and the discounts
-    public ResponseEntity<Articles> ShowArticle(@PathVariable String id){//to be sorted by when they created (as bonus)
+    @GetMapping("/managearticles/{id}")//Show the specific article
+    public ResponseEntity<Articles> ShowArticle(@PathVariable Long id){//to be sorted by when they created (as bonus)
         Articles articles = ArticlesRepository.findById(id).orElseThrow(() ->
-                new NoSuchElementException("Trainer not found! "));
+                new NoSuchElementException("Article not found! "));
         return new ResponseEntity<>(articles , HttpStatus.OK);
     }
 
@@ -349,72 +380,69 @@ public class UsersController {
     }
 
     @DeleteMapping("/managearticles/delete/{id}")//Delete specific article
-    public ResponseEntity<String> DeleteArticle(@PathVariable String id){
+    public ResponseEntity<String> DeleteArticle(@PathVariable Long id){
         ArticlesRepository.deleteById(id);
         return new ResponseEntity<>("the article deleted successfully" , HttpStatus.OK);
     }
 
-//USER
-    @GetMapping("/service/show/{service_name}")//Show the weekly program of the specific service
-    public ResponseEntity<List<Programs>>  ShowProgramsofService(@PathVariable String service_name){
-        List<Programs> services_program = ProgramsRepository.showProgram(service_name);
-        return new ResponseEntity<>(services_program , HttpStatus.OK);
+    //USER
+    @GetMapping("/service/show/{service_id}")//Show the weekly program of the specific service
+    public ResponseEntity<List<ProgramDTO>>  ShowProgramsofService(@PathVariable Long service_id){
+        LocalDate today = LocalDate.now();
+        LocalDate monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate saturday = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+        List<Programs> services_program = ProgramsRepository.findWeekProgram(service_id,monday,saturday);
+        return new ResponseEntity<>(toProgramDTOList(services_program) , HttpStatus.OK);
     }
-//B.2
+    //B.2
     @GetMapping("/reservationsavailable/{userid}")//Show all the reservations available
-    public ResponseEntity<List<Programs>> ShowAllAvailableRes(@PathVariable String userid){
-        List<Programs> available_program = ProgramsRepository.ShowAllAvailable();
-        List<UserReservations> userReservations = reservationsRepository.findReservationsByUserid(userid);
-
-        // Create a set of program IDs that the user has already reserved
-        Set<String> reservedPrograms = userReservations.stream()
-                .map(UserReservations::getProgramid)
-                .collect(Collectors.toSet());
-
-        // Filter out programs that the user has already reserved
-        List<Programs> filteredPrograms = available_program.stream()
-                .filter(program -> !reservedPrograms.contains(program.getId()))
-                .collect(Collectors.toList());
-        return new ResponseEntity<>(filteredPrograms , HttpStatus.OK);
+    public ResponseEntity<List<ProgramDTO>> ShowAllAvailableRes(@PathVariable Long userid){
+        List<Programs> availablePrograms;
+        LocalDate today = LocalDate.now();
+        List<Long> userReservationsId = reservationsRepository.findAllProgramidFromUser(userid);
+        if(userReservationsId.isEmpty()){
+            availablePrograms = ProgramsRepository.findReservationsAvailable(today);
+        }
+        else{
+            availablePrograms = ProgramsRepository.findReservationsAvailableWithoutUserid(today,userReservationsId);
+        }
+        return new ResponseEntity<>(toProgramDTOList(availablePrograms), HttpStatus.OK);
     }
 
-    @GetMapping("/reservationuser/{userid}")//Show all the reservations that user has made for future
-    public ResponseEntity<List<Programs>> ShowNewReservations(@PathVariable String userid){
-        List<UserReservations> all_userreservations = UsersRepository.findByUserid(userid);
-
-        Set<String> program_id = all_userreservations.stream()
-                .map(UserReservations::getProgramid)
-                .collect(Collectors.toSet());
-        Date now = new Date();
-        Query query = new Query();
-        query.addCriteria(Criteria.where("id").in(program_id));
-        query.addCriteria(Criteria.where("programdate").gt(now));
-
-        List<Programs> futurePrograms = MongoTemplate.find(query, Programs.class);
-
-        return new ResponseEntity<>(futurePrograms, HttpStatus.OK);
+    @GetMapping("/reservationuser/{userid}")//Show all the program for the reservations that user has made for future
+    public ResponseEntity<List<ProgramDTO>> ShowNewReservations(@PathVariable Long userid){
+        List<Programs> futureProgram;
+        LocalDate today = LocalDate.now();
+        List<Long> userReservationsId = reservationsRepository.findAllProgramidFromUser(userid);
+        if(userReservationsId.isEmpty()){
+            futureProgram = Collections.emptyList(); //return empty list
+        }
+        else{
+            futureProgram = ProgramsRepository.findFutureReservationsForUserid(today, userReservationsId);
+        }
+        return new ResponseEntity<>(toProgramDTOList(futureProgram), HttpStatus.OK);
     }
 
     @PostMapping("/reservations/create")//Create new reservation
-    public ResponseEntity<String> NewReservation(@RequestBody UserReservations res){
+    public ResponseEntity<String> NewReservation(@RequestBody ReservationDTO resDto){
+        UserReservations res = newReservationFromDTO(resDto);
         reservationsRepository.save(res);
-        Programs theprogram = ProgramsRepository.findById(res.getProgramid()).orElseThrow(() ->
-                new NoSuchElementException("Trainer not found! "));//if the id was not found
+        Programs theprogram = res.getProgram();
         theprogram.addpeople();
         ProgramsRepository.save(theprogram);
         return new ResponseEntity<>("Reservation submitted" , HttpStatus.OK);
     }
 
     @DeleteMapping("/reservations/delete/{userid}/{programid}")//Cancel the specific reservation
-    public ResponseEntity<String> DeleteReservation(@PathVariable String userid , @PathVariable String programid){
-        UserReservations thereservation = reservationsRepository.findByUseridAndProgramid(userid , programid);
+    public ResponseEntity<String> DeleteReservation(@PathVariable Long userid , @PathVariable Long programid){
+        UserReservations thereservation = reservationsRepository.findByUser_IdAndProgram_IdOrderByCreatedAtDesc(userid , programid);
         if (thereservation == null) {
             return new ResponseEntity<>("Reservation not found", HttpStatus.NOT_FOUND);
         }
         LocalDate today = LocalDate.now();
-        Programs theprogram = ProgramsRepository.findById(thereservation.getProgramid()).orElseThrow(() ->
+        Programs theprogram = ProgramsRepository.findById(thereservation.getProgram().getId()).orElseThrow(() ->
                 new NoSuchElementException("Trainer not found! "));//if the id was not found
-        LocalDate program_date = theprogram.getProgramdate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate program_date = theprogram.getProgramdate();
         if(program_date.isBefore(today)){
             return new ResponseEntity<>("Δεν μπορεί να διαγραφεί η κράτηση" , HttpStatus.BAD_REQUEST);
         }
@@ -431,17 +459,17 @@ public class UsersController {
         return new ResponseEntity<>("Επυτιχής διαγραφή κράτησης" , HttpStatus.OK);
     }
 
-//B.3
+    //B.3
     @GetMapping("/reservations/{id}")//Show all the reservations of the user
-    public ResponseEntity<List<Programs>> ShowAllUserReservations(@PathVariable String id){
-        List<UserReservations> all_userreservations = UsersRepository.findByUserid(id);
-
-        List<Programs> user_programs = new ArrayList<>();
-
-        for (UserReservations res : all_userreservations) {
-            Optional<Programs> program = ProgramsRepository.findById(res.getProgramid());
-            program.ifPresent(user_programs::add);
+    public ResponseEntity<List<ProgramDTO>> ShowAllUserReservations(@PathVariable Long id){
+        List<Programs> userPrograms;
+        List<Long> userReservationId = reservationsRepository.findAllProgramidFromUser(id);
+        if(userReservationId.isEmpty()){
+            userPrograms = Collections.emptyList();
         }
-        return new ResponseEntity<>(user_programs, HttpStatus.OK);
+        else{
+            userPrograms = ProgramsRepository.findAllByIdIn(userReservationId);
+        }
+        return new ResponseEntity<>(toProgramDTOList(userPrograms), HttpStatus.OK);
     }
 }
