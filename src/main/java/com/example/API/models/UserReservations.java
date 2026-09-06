@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Table(name = "reservations")
 public class UserReservations {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     // FK -> program.id  (was: private Long programid;)

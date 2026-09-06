@@ -277,7 +277,7 @@ public class UsersController {
     @PostMapping("/manageservices/services/change")//Change elements of the service
     public ResponseEntity<String> ChangeService(@RequestBody Services service){
         Services theservice = ServicesRepository.findById(service.getId()).orElseThrow(() ->
-                new NoSuchElementException("Trainer not found! "));//if the id was not found
+                new NoSuchElementException("Service not found! "));//if the id was not found
         theservice.setName(service.getName());
         theservice.setDescription(service.getDescription());
         theservice.setPrice(service.getPrice());

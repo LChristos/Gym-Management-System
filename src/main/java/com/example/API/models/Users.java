@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 public class Users {
 //When i use a SET i need to update also the table
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;

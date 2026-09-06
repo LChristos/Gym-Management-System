@@ -62,7 +62,7 @@ function display_trainers(trainers) {
     Object.values(trainers).forEach(trainer => {
         let trainer_row = document.createElement('tr');
         trainer_row.className = 'trainer_data';
-        let formId = trainer.id;
+        let formId = 'trainer_' + trainer.id;
         // Create the trainer data
         let trainer_details = `
                 <td><input type="text" name="name" id="name_${trainer.id}" value="${trainer.name}" form="${formId}"/></td>
@@ -89,9 +89,9 @@ function display_trainers(trainers) {
     list_system.appendChild(table);
 
     Object.values(trainers).forEach(trainer => {//For each trainer what the Change button do
-        let change_trainer = document.getElementById(trainer.id);
+        let change_trainer = document.getElementById('trainer_' + trainer.id);
         if (change_trainer){
-            document.getElementById(trainer.id).addEventListener('submit' , function(event) {
+            document.getElementById('trainer_' + trainer.id).addEventListener('submit' , function(event) {
                 event.preventDefault();
                 let data = {
                     id: trainer.id,
@@ -166,7 +166,7 @@ function display_services(services) {
     Object.values(services).forEach(service => {
         let service_row = document.createElement('tr');
         service_row.className = 'service_data';
-        let formId = service.id;
+        let formId = 'service_' + service.id;
         let service_details = `
                 <td><input type="text" name="service_name" id="service_name_${service.id}" value="${service.name}" form="${formId}"/></td>
                 <td><input type="text" name="description" id="description_${service.id}" value="${service.description}" form="${formId}"/></td>
@@ -194,9 +194,9 @@ function display_services(services) {
     list_services.appendChild(table);
 
     Object.values(services).forEach(service => {//For each service the change button
-        let change_service = document.getElementById(service.id);
+        let change_service = document.getElementById('service_' + service.id);
         if (change_service){
-            document.getElementById(service.id).addEventListener('submit' , function(event) {
+            document.getElementById('service_' + service.id).addEventListener('submit' , function(event) {
                 event.preventDefault();
                 let data = {
                     id: service.id,
@@ -275,7 +275,7 @@ function display_programs(programs) {
     Object.values(programs).forEach(program => {
         let program_row = document.createElement('tr');
         program_row.className = 'program_data';
-        let formId = program.id;
+        let formId = 'program_' + program.id;
         //List of trainers
         let trainer_option = `<select id="trainer_id_${program.id}" name="trainer_id" form="${formId}">`;
         listoftrainers.forEach(trainer => {
@@ -322,9 +322,9 @@ function display_programs(programs) {
     list_program.appendChild(table);
 
     Object.values(programs).forEach(program => {//Change button for the program
-        let change_program = document.getElementById(program.id);
+        let change_program = document.getElementById('program_' + program.id);
         if (change_program){
-            document.getElementById(program.id).addEventListener('submit' , function(event) {
+            document.getElementById('program_' + program.id).addEventListener('submit' , function(event) {
                 event.preventDefault();
                 let trainerId = document.getElementById(`trainer_id_${program.id}`);
                 let serviceId = document.getElementById(`services_name_${program.id}`);
