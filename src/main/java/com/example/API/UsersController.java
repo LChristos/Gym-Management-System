@@ -22,6 +22,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -185,6 +186,7 @@ public class UsersController {
 
     @DeleteMapping("/manageusers/delete/{id}")//Delete the user
     public ResponseEntity<String> DeleteUser(@PathVariable Long id){
+        reservationsRepository.deleteByUser_Id(id);
         UsersRepository.deleteById(id);
         return new ResponseEntity<>("User deleted successfully" , HttpStatus.OK);
     }
@@ -227,8 +229,16 @@ public class UsersController {
         return new ResponseEntity<>("Trainer successfully updated" , HttpStatus.OK);
     }
 
+    @Transactional
     @DeleteMapping("/manageservices/trainers/delete/{id}")//Delete trainer
     public ResponseEntity<String> DeleteTrainer(@PathVariable Long id){
+        LocalDate date = LocalDate.now();
+        List<Long> program_ids = ProgramsRepository.findByTrainerIdAndProgramdateGreaterThanEqual(date, id);
+        if (!program_ids.isEmpty()){
+            reservationsRepository.deleteAllReservationsFromPrograms(program_ids);
+        }
+        ProgramsRepository.deleteByTrainer_IdFuturePrograms(date ,id);
+        ProgramsRepository.detachTrainerFromProgram(id);
         trainersRepository.deleteById(id);
         return new ResponseEntity<>("Trainer deleted successfully" , HttpStatus.OK);
     }
@@ -286,8 +296,16 @@ public class UsersController {
         return new ResponseEntity<>("Service successfully updated" , HttpStatus.OK);
     }
 
+    @Transactional
     @DeleteMapping("/manageservices/services/delete/{id}")//Delete service
     public ResponseEntity<String> DeleteService(@PathVariable Long id){
+        LocalDate date = LocalDate.now();
+        List<Long> program_ids = ProgramsRepository.findByServiceIdAndProgramdateGreaterThanEqual(date, id);
+        if (!program_ids.isEmpty()){
+            reservationsRepository.deleteAllReservationsFromPrograms(program_ids);
+        }
+        ProgramsRepository.deleteByService_IdFuturePrograms(date ,id);
+        ProgramsRepository.detachServiceFromProgram(id);
         ServicesRepository.deleteById(id);
         return new ResponseEntity<>("Service deleted successfully" , HttpStatus.OK);
     }
@@ -341,6 +359,7 @@ public class UsersController {
 
     @DeleteMapping("/manageservices/program/delete/{id}")//Delete specific part of the program
     public ResponseEntity<String> DeleteProgram(@PathVariable("id") Long id){
+        reservationsRepository.deleteByProgram_Id(id);
         ProgramsRepository.deleteById(id);
         return new ResponseEntity<>("the specific schedule deleted successfully" , HttpStatus.OK);
     }

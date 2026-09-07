@@ -23,7 +23,7 @@ document.getElementById('add').addEventListener('submit' , function(event) {
             });
         })
         .then(response => {
-             response.text().then(message => {
+             return response.text().then(message => {
                 if(!response.ok){
                     throw new Error(message);
                 }

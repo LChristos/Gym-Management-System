@@ -16,7 +16,7 @@ public class Programs {
 
     // FK -> service.id  (was: private String services_name;)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_id", nullable = false)
+    @JoinColumn(name = "service_id", nullable = true)
     private Services service;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -26,7 +26,7 @@ public class Programs {
     private LocalTime hour;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "trainer_id" , nullable = false)
+    @JoinColumn(name = "trainer_id" , nullable = true)
     private Trainers trainer;
 
     private int max_people;

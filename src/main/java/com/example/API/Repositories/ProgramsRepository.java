@@ -2,6 +2,7 @@ package com.example.API.Repositories;
 
 import com.example.API.models.Programs;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -35,4 +36,32 @@ public interface ProgramsRepository extends JpaRepository<Programs, Long>{ // Us
 
     //Find all the programs that the user has made a reservation
     List<Programs> findAllByIdIn(List<Long> programid);
+
+    //Find all the future programs for a specific trainer
+    @Query("SELECT u.id FROM Programs u WHERE u.programdate >= :date AND u.trainer.id = :trainerid")
+    List<Long> findByTrainerIdAndProgramdateGreaterThanEqual(@Param("date") LocalDate date, @Param("trainerid") Long id);
+
+    //Delete the future programs that have this specific trainer
+    @Modifying
+    @Query("DELETE FROM Programs u WHERE u.programdate >= :date AND u.trainer.id = :trainerid")
+    void deleteByTrainer_IdFuturePrograms(@Param("date") LocalDate date, @Param("trainerid") Long trainerid);
+
+    //Find all the future programs for a specific service
+    @Query("SELECT u.id FROM Programs u WHERE u.programdate >= :date AND u.service.id = :serviceid")
+    List<Long> findByServiceIdAndProgramdateGreaterThanEqual(@Param("date") LocalDate date, @Param("serviceid") Long id);
+
+    //Delete the future programs that have this specific trainer
+    @Modifying
+    @Query("DELETE FROM Programs u WHERE u.programdate >= :date AND u.service.id = :serviceid")
+    void deleteByService_IdFuturePrograms(@Param("date") LocalDate date, @Param("serviceid") Long trainerid);
+
+    //Update the programs with this sevice id to null
+    @Modifying
+    @Query("UPDATE Programs u SET u.service = NULL WHERE u.service.id = :serviceid")
+    void detachServiceFromProgram(@Param("serviceid") Long serviceid);
+
+    //Update the programs with this trainer id to null
+    @Modifying
+    @Query("UPDATE Programs u SET u.trainer = NULL WHERE u.trainer.id = :trainerid")
+    void detachTrainerFromProgram(@Param("trainerid") Long trainerid);
 }

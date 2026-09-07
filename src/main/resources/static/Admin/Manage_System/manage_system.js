@@ -1,15 +1,15 @@
 window.addEventListener('DOMContentLoaded', function() {
-    fetch_trainers();
-    fetch_services();
     fetchdatatrainer();
     fetchdataservice();
-    fetchdataprogram();
+    Promise.all([fetch_trainers(), fetch_services()])
+        .then(() => fetchdataprogram())
+        .catch(error => console.error('Error loading trainers/services before program:', error));
 });
 
 let listoftrainers = [];//list of trainers for the program
 
 function fetch_trainers() {
-    fetch('http://localhost:8080/manageservices/trainers', { credentials: 'include' })
+    return fetch('http://localhost:8080/manageservices/trainers', { credentials: 'include' })
         .then(response => response.json())
         .then(trainers => {
             listoftrainers = trainers;
@@ -20,7 +20,7 @@ function fetch_trainers() {
 let listofservices = [];//List of the services for the program
 
 function fetch_services() {
-    fetch('http://localhost:8080/manageservices/services', { credentials: 'include' })
+    return fetch('http://localhost:8080/manageservices/services', { credentials: 'include' })
         .then(response => response.json())
         .then(services => {
             listofservices = services;
