@@ -81,8 +81,23 @@ document.getElementById('register').addEventListener('submit' , function(event) 
         console.log('Error:' , error);
     });
 });
+
+if (new URLSearchParams(location.search).has('error')) {
+    alert('Wrong Credentials');
+}
+
+//Get the CSRF token
+fetch('http://localhost:8080/csrf' ,{
+    method: 'GET' ,
+})
+.then(r => r.json())
+.then(data => {
+    document.getElementById("csrfToken").value = data.token;
+});
+
+
 //When someone login
-document.getElementById('login').addEventListener('submit' , function(event) {
+/*document.getElementById('login').addEventListener('submit' , function(event) {
     event.preventDefault();
     let login_data= {
         username : document.getElementById('login_username').value,
@@ -95,7 +110,7 @@ document.getElementById('login').addEventListener('submit' , function(event) {
             'Content-Type': 'application/json'
         },
         credentials: 'include',
-        body: JSON.stringify(login_data)
+        body: login_data
     })
     .then(response => {
         return response.text().then(message => {
@@ -113,7 +128,7 @@ document.getElementById('login').addEventListener('submit' , function(event) {
         alert(error.message);
         console.log('Error:' , error);
     })
-})
+})*/
 //After the login what to do depends on role
 if (window.userRole === "user") {
     window.location.href = "/User/Show_Announcements/announcement.html";

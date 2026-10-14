@@ -1,4 +1,4 @@
-package com.example.API;
+package com.example.API.controllers;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -115,7 +115,7 @@ public class UsersController {
         }
 
     }
-
+/*
     @PostMapping("/login")//Login as user or admin
     public ResponseEntity<String> loginUser(@RequestBody Users user , HttpServletResponse response){
         String username = user.getUsername();
@@ -137,7 +137,7 @@ public class UsersController {
         else{
             return new ResponseEntity<>("Δεν υπάρχει τέτοιο όνομα Χρήστη" , HttpStatus.UNAUTHORIZED);
         }
-    }
+    }*/
     //ADMIN
     @GetMapping("/request")//Give all the users with accepted == false
     public ResponseEntity<List<Users>> NotAccepted(){
