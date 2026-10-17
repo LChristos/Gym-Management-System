@@ -18,8 +18,18 @@ function fetcharticles(){
 }
 
 function Delete_announcement(articleId){
-    fetch('http://localhost:8080/managearticles/delete/' + articleId, { method: 'DELETE' })
-    .then(response => response.text())
+    csrfReady.then(() =>
+        fetch('http://localhost:8080/managearticles/delete/' + articleId, {
+            method: 'DELETE' ,
+            headers: {
+                'X-CSRF-TOKEN': csrfToken
+            }})
+    )
+    .then(response => {
+        if(!response.ok){
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        return response.text()})
     .then(message => {
         alert(message);
         fetcharticles();  //Refresh list
@@ -33,14 +43,17 @@ document.getElementById('create_announcement').addEventListener('submit' , funct
         title: document.getElementById('new_title').value,
         body: document.getElementById('new_body').value
     }
-    fetch('http://localhost:8080/managearticles/create' , {
-        method: 'POST' ,
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify(article_data)
-    })
+    csrfReady.then(() =>
+        fetch('http://localhost:8080/managearticles/create' , {
+            method: 'POST' ,
+            headers: {
+                'Content-Type': 'application/json' ,
+                'X-CSRF-TOKEN': csrfToken
+            },
+            credentials: 'include',
+            body: JSON.stringify(article_data)
+        })
+    )
     .then(response => {
         return response.text().then(message => {
             if(!response.ok){

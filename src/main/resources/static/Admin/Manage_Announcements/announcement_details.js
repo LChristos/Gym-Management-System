@@ -20,15 +20,22 @@ document.getElementById('announcement_info').addEventListener('submit' , functio
         body: document.getElementById('body').value
     }
 
-    fetch('http://localhost:8080/managearticles/change' , {
-        method: 'POST' ,
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify(announcement_data)
-    })
-    .then(response => response.text())
+    csrfReady.then(() =>
+        fetch('http://localhost:8080/managearticles/change' , {
+            method: 'POST' ,
+            headers: {
+                'Content-Type': 'application/json' ,
+                'X-CSRF-TOKEN': csrfToken
+            },
+            credentials: 'include',
+            body: JSON.stringify(announcement_data)
+        })
+    )
+    .then(response => {
+        if(!response.ok){
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        return response.text()})
     .then(message => {
         alert(message);
         document.location.href = "/Admin/Manage_Announcements/announcement.html";

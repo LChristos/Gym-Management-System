@@ -5,14 +5,17 @@ document.getElementById('add').addEventListener('submit' , function(event) {
         surname: document.getElementById('surname').value
     }
 
-    fetch('http://localhost:8080/manageservices/trainers/create' , {
-        method: 'POST' ,
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify(trainer_data)
-    })
+    csrfReady.then(() =>
+        fetch('http://localhost:8080/manageservices/trainers/create' , {
+            method: 'POST' ,
+            headers: {
+                'Content-Type': 'application/json' ,
+                'X-CSRF-TOKEN': csrfToken
+            },
+            credentials: 'include',
+            body: JSON.stringify(trainer_data)
+        })
+    )
     .then(response => {
         return response.text().then(message => {
             if(!response.ok){

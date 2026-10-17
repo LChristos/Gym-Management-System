@@ -85,18 +85,6 @@ public class UsersController {
         return new UserReservations(program, user);
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<String> Logout(HttpServletResponse response){
-        Cookie cookie = new Cookie("token", null);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        cookie.setHttpOnly(false);
-
-        response.addCookie(cookie);
-        return new ResponseEntity<>("Επιτυχής Αποσύνδεση " , HttpStatus.OK);
-    }
-
-
     @PostMapping("/signup")//save the user in table
     public ResponseEntity<String> newUser(@RequestBody Users user){
         try{
@@ -115,29 +103,7 @@ public class UsersController {
         }
 
     }
-/*
-    @PostMapping("/login")//Login as user or admin
-    public ResponseEntity<String> loginUser(@RequestBody Users user , HttpServletResponse response){
-        String username = user.getUsername();
-        String password = user.getPassword();
-        Users theuser = UsersRepository.findByUsername(username);
-        if(theuser != null) {
-            if (theuser.getPassword().equals(password)) {
-                Cookie cookie = new Cookie("token" , theuser.getId() + "|" + theuser.getRole() + "|" + theuser.getAccepted());
-                cookie.setPath("/");
-                cookie.setHttpOnly(false);
-                cookie.setMaxAge(60*60*24*30);//Expires after 30 days
 
-                response.addCookie(cookie);
-                return new ResponseEntity<>("Επιτυχής σύνδεση χρήστη", HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>("Ο Κωδικός Πρόσβασης είναι λάθος", HttpStatus.UNAUTHORIZED);
-            }
-        }
-        else{
-            return new ResponseEntity<>("Δεν υπάρχει τέτοιο όνομα Χρήστη" , HttpStatus.UNAUTHORIZED);
-        }
-    }*/
     //ADMIN
     @GetMapping("/request")//Give all the users with accepted == false
     public ResponseEntity<List<Users>> NotAccepted(){

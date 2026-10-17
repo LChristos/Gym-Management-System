@@ -93,15 +93,22 @@ function display_users(users) {
                 };
 
                 console.log(data);
-                // Example of sending data via fetch API
-                fetch('http://localhost:8080/manageusers/change', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json' // Required for POST
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => response.text())
+                // Sending data via fetch API
+                csrfReady.then(() =>
+                    fetch('http://localhost:8080/manageusers/change', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json' ,// Required for POST
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify(data)
+                    })
+                )
+                .then(response => {
+                    if(!response.ok){
+                        throw new Error(`HTTP error: ${response.status}`);
+                    }
+                    return response.text()})
                 .then(message => {
                     alert(message);
                     fetchdata();
@@ -116,15 +123,16 @@ function display_users(users) {
 }
 
 
-
-
-
 function Delete_user(userId){
-    fetch('http://localhost:8080/manageusers/delete/' + userId, { method: 'DELETE' })
-        .then(response => response.text())
-        .then(message => {
-            alert(message);
-            fetchdata();  //Refresh list
-        })
-        .catch(error => console.error('Error:', error));
+    csrfReady.then(() =>
+        fetch('http://localhost:8080/manageusers/delete/' + userId,
+            { method: 'DELETE' ,
+                headers: {'X-CSRF-TOKEN': csrfToken}})
+    )
+    .then(response => response.text())
+    .then(message => {
+        alert(message);
+        fetchdata();  //Refresh list
+    })
+    .catch(error => console.error('Error:', error));
 }

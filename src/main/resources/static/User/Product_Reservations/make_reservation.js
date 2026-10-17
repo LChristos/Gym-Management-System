@@ -156,15 +156,17 @@ function Delete_Reservation(programid , userid){
         programid: programid,
         userid: userid
     }
-    fetch('http://localhost:8080/reservations/delete/' + userid +"/" + programid , {
-        method: 'DELETE' ,
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify(res_data)
-
-    })
+    csrfReady.then(() =>
+        fetch('http://localhost:8080/reservations/delete/' + userid +"/" + programid , {
+            method: 'DELETE' ,
+            headers: {
+                'Content-Type': 'application/json' ,
+                'X-CSRF-TOKEN': csrfToken
+            },
+            credentials: 'include',
+            body: JSON.stringify(res_data)
+        })
+    )
     .then(response => {
         return response.text().then(message => {
             if(!response.ok){
@@ -191,15 +193,17 @@ function Make_Reservation(programId , userId){
         programid: programId,
         userid: userId
     }
-    fetch('http://localhost:8080/reservations/create' , {
-        method: 'POST' ,
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify(res_data)
-
-    })
+    csrfReady.then(() =>
+        fetch('http://localhost:8080/reservations/create' , {
+            method: 'POST' ,
+            headers: {
+                'Content-Type': 'application/json' ,
+                'X-CSRF-TOKEN': csrfToken
+            },
+            credentials: 'include',
+            body: JSON.stringify(res_data)
+        })
+    )
     .then(response => {
         return response.text().then(message => {
             if(!response.ok){

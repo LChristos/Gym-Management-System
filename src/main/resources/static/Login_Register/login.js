@@ -56,20 +56,30 @@ document.getElementById('register').addEventListener('submit' , function(event) 
         password: document.getElementById('register_password').value
     };
 
-    fetch('http://localhost:8080/signup' , {
-        method: 'POST' ,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => {
-        return response.text().then(message => {
-            if(!response.ok){
-                throw new Error(message);
-            }
-            return message;
-        });
+    csrfReady.then(() =>
+        fetch('http://localhost:8080/signup' , {
+            method: 'POST' ,
+            headers: {
+                'Content-Type': 'application/json' ,
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify(data)
+        })
+    )
+    .then(async response => {
+        console.log("Status:", response.status);
+        console.log("URL:", response.url);
+        console.log("Redirected:", response.redirected);
+        console.log("Content-Type:", response.headers.get("content-type"));
+
+        const message = await response.text();
+        console.log("Response:", message);
+
+        if (!response.ok || response.redirected) {
+            throw new Error(`Registration failed: ${response.status}`);
+        }
+
+        return message;
     })
     .then(message => {
         alert(message);

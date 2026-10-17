@@ -13,14 +13,17 @@ document.getElementById('add').addEventListener('submit' , function(event) {
                 url_image: imageUrl
             }
 
-            return fetch('http://localhost:8080/manageservices/services/create' , {
-                method: 'POST' ,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify(service_data)
-            });
+            return csrfReady.then(() =>
+                fetch('http://localhost:8080/manageservices/services/create' , {
+                    method: 'POST' ,
+                    headers: {
+                        'Content-Type': 'application/json' ,
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(service_data)
+                })
+            );
         })
         .then(response => {
              return response.text().then(message => {
@@ -44,12 +47,22 @@ function upload_image(file){
     let form_data = new FormData();
     form_data.append("image", file);
 
-    return fetch('http://localhost:8080/uploadimage', {
-        method: 'POST',
-        body: form_data,
-        credentials: 'include'
+    return csrfReady.then(() =>
+        fetch('http://localhost:8080/uploadimage', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: form_data,
+            credentials: 'include'
+        })
+    )
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Image upload failed: HTTP ${response.status}`);
+        }
+        return response.json();
     })
-    .then(response => response.json())
     .then(data => {
         if (data.imageUrl) {
             return data.imageUrl;

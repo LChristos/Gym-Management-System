@@ -60,21 +60,37 @@ function display_users(users) {
 }
 
 function accept_user(userId) {//To accept the user
-    fetch('http://localhost:8080/request/accepted/' + userId, { method: 'POST' })
-        .then(response => response.text())
-        .then(message => {
-            alert(message);
-            fetchdata(); //Refresh list
-        })
-        .catch(error => console.error('Error:', error));
+    csrfReady.then(() =>
+        fetch('http://localhost:8080/request/accepted/' + userId, {
+            method: 'POST' ,
+            header: {'X-CSRF-TOKEN': csrfToken}})
+    )
+    .then(response => {
+        if(!response.ok){
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        return response.text()})
+    .then(message => {
+        alert(message);
+        fetchdata(); //Refresh list
+    })
+    .catch(error => console.error('Error:', error));
 }
 
 function reject_user(userId) {//To reject and delete the user
-    fetch('http://localhost:8080/request/denied/' + userId, { method: 'DELETE' })
-        .then(response => response.text())
-        .then(message => {
-            alert(message);
-            fetchdata(); //Refresh list
-        })
-        .catch(error => console.error('Error:', error));
+    csrfReady.then(() =>
+        fetch('http://localhost:8080/request/denied/' + userId, {
+            method: 'DELETE' ,
+            headers: {'X-CSRF-TOKEN': csrfToken}})
+    )
+    .then(response => {
+        if(!response.ok){
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        return response.text()})
+    .then(message => {
+        alert(message);
+        fetchdata(); //Refresh list
+    })
+    .catch(error => console.error('Error:', error));
 }

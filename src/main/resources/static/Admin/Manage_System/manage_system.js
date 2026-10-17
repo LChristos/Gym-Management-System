@@ -99,14 +99,21 @@ function display_trainers(trainers) {
                     surname: document.getElementById(`surname_${trainer.id}`).value,
                 };
 
-                fetch('http://localhost:8080/manageservices/trainers/change', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json' // Required for POST
-                    },
-                    body: JSON.stringify(data)
-                })
-                .then(response => response.text())
+                csrfReady.then(() =>
+                    fetch('http://localhost:8080/manageservices/trainers/change', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json' ,// Required for POST
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify(data)
+                    })
+                )
+                .then(response => {
+                    if(!response.ok){
+                        throw new Error(`HTTP error: ${response.status}`);
+                    }
+                    return response.text()})
                 .then(message => {
                     alert(message);
                     fetchdatatrainer();
@@ -121,13 +128,17 @@ function display_trainers(trainers) {
 }
 //Delete Trainer
 function Delete_trainer(trainerId){
-    fetch('http://localhost:8080/manageservices/trainers/delete/' + trainerId, { method: 'DELETE' })
-        .then(response => response.text())
-        .then(message => {
-            alert(message);
-            fetchdatatrainer();  //Refresh list
-        })
-        .catch(error => console.error('Error:', error));
+    csrfReady.then(() =>
+        fetch('http://localhost:8080/manageservices/trainers/delete/' + trainerId,
+            { method: 'DELETE' ,
+                headers: {'X-CSRF-TOKEN': csrfToken}})
+    )
+    .then(response => response.text())
+    .then(message => {
+        alert(message);
+        fetchdatatrainer();  //Refresh list
+    })
+    .catch(error => console.error('Error:', error));
 }
 
 //CRUD FOR THE SERVICES
@@ -206,15 +217,22 @@ function display_services(services) {
                     max_people: document.getElementById(`max_people_${service.id}`).value
                 };
 
-                fetch('http://localhost:8080/manageservices/services/change', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json' // Required for POST
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify(data)
-                })
-                .then(response => response.text())
+                csrfReady.then(() =>
+                    fetch('http://localhost:8080/manageservices/services/change', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json' ,// Required for POST
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(data)
+                    })
+                )
+                .then(response => {
+                    if(!response.ok){
+                        throw new Error(`HTTP error: ${response.status}`);
+                    }
+                    return response.text()})
                 .then(message => {
                     alert(message);
                     fetchdataservice();
@@ -229,13 +247,21 @@ function display_services(services) {
 }
 //Delete Service
 function Delete_service(serviceId){
-    fetch('http://localhost:8080/manageservices/services/delete/' + serviceId, { method: 'DELETE' })
-        .then(response => response.text())
-        .then(message => {
-            alert(message);
-            fetchdataservice();  //Refresh list
-        })
-        .catch(error => console.error('Error:', error));
+    csrfReady.then(() =>
+        fetch('http://localhost:8080/manageservices/services/delete/' + serviceId,
+            { method: 'DELETE' ,
+                headers: {'X-CSRF-TOKEN': csrfToken}})
+    )
+    .then(response => {
+        if(!response.ok){
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        return response.text()})
+    .then(message => {
+        alert(message);
+        fetchdataservice();  //Refresh list
+    })
+    .catch(error => console.error('Error:', error));
 }
 
 //CRUD FOR PROGRAM
@@ -339,14 +365,21 @@ function display_programs(programs) {
                 };
 
                 // Example of sending data via fetch API
-                fetch('http://localhost:8080/manageservices/program/change', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json' // Required for POST
-                    },
-                    body: JSON.stringify(programs_data)
-                })
-                .then(response => response.text())
+                csrfReady.then(() =>
+                    fetch('http://localhost:8080/manageservices/program/change', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json' ,// Required for POST
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify(programs_data)
+                    })
+                )
+                .then(response => {
+                    if(!response.ok){
+                        throw new Error(`HTTP error: ${response.status}`);
+                    }
+                    return response.text()})
                 .then(message => {
                     alert(message);
                     fetchdataprogram();

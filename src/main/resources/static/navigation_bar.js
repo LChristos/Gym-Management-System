@@ -27,7 +27,10 @@ if (cookie_info) {
                 <a href="/User/Product_Reservations/make_reservation.html">Κρατήση προϊόντος/Υπηρεσίας</a>
                 <a href="/User/Show_History/history_userreservation.html">Ιστορικό Κρατήσεων</a>
                 <a href="/User/Show_Announcements/announcement.html">Νέα και Ανακοινώσεις</a>
-                <button onclick="Logout()">Logout</button>
+                <form id="logout" method="post" action="/logout">
+                    <button type="submit">Logout</button>
+                    <input type="hidden" id="csrfToken" name="_csrf" value=""/>
+                </form>
             </ul>
         </nav>`;
     }
@@ -40,7 +43,10 @@ if (cookie_info) {
                 <a href="/Admin/Manage_Users/manage_users.html">Διαχείριση Χρηστών</a>
                 <a href="/Admin/Manage_System/manage_system.html">Διαχείριση Συστήματος</a>
                 <a href="/Admin/Manage_Announcements/announcement.html">Νέα και Ανακοινώσεις</a>
-                <button onclick="Logout()">Logout</button>
+                <form id="logout" method="post" action="/logout">
+                    <button type="submit">Logout</button>
+                    <input type="hidden" id="csrfToken" name="_csrf" value=""/>
+                </form>
             </ul>
         </nav>`;
     }
@@ -49,7 +55,10 @@ if (cookie_info) {
         <nav>
             <ul>
                 <a href="/User/Show_Services/show_services.html">Υπηρεσίες</a>
-                <button onclick="Logout()">Logout</button>
+                <form id="logout" method="post" action="/logout">
+                    <button type="submit">Logout</button>
+                    <input type="hidden" id="csrfToken" name="_csrf" value=""/>
+                </form>
             </ul>
         </nav>`;
     }
@@ -65,17 +74,11 @@ else {
     console.log("Cookie not found");
 }
 
-function Logout() {
-    fetch('http://localhost:8080/logout' , {
-        method: 'POST',
-        credentials: 'include'
-    })
-    .then(response => response.text())
-    .then(message => {
-        alert(message);
-        window.location.href = '/Login_Register/newuser.html'
-    })
-    .catch(error => console.error('Error:', error));
-}
-
-
+//Get the CSRF token
+fetch('http://localhost:8080/csrf' ,{
+    method: 'GET' ,
+})
+    .then(r => r.json())
+    .then(data => {
+        document.getElementById("csrfToken").value = data.token;
+    });

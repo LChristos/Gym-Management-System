@@ -51,14 +51,17 @@ document.getElementById('add').addEventListener('submit' , function(event) {
         max_people: document.getElementById('max_people').value
     }
 
-    fetch('http://localhost:8080/manageservices/program/create' , {
-        method: 'POST' ,
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify(program_data)
-    })
+    csrfReady.then(() =>
+        fetch('http://localhost:8080/manageservices/program/create' , {
+            method: 'POST' ,
+            headers: {
+                'Content-Type': 'application/json' ,
+                'X-CSRF-TOKEN': csrfToken
+            },
+            credentials: 'include',
+            body: JSON.stringify(program_data)
+        })
+    )
     .then(response => {
         return response.text().then(message => {
             if(!response.ok){
@@ -68,8 +71,6 @@ document.getElementById('add').addEventListener('submit' , function(event) {
         });
     })
     .then(message => {
-
-
         alert(message);
         document.location.href = "/Admin/Manage_System/manage_system.html";
     })

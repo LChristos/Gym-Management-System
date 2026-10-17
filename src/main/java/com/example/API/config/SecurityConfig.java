@@ -24,9 +24,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(Customizer.withDefaults());
         http.authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/Login_Register/**", "/User/Show_Services/**", "/Images/*" , "/csrf").permitAll()
-                        .requestMatchers("/Admin/**").authenticated()
-                        .requestMatchers("/User/**").authenticated() //.hasRole("USER")
+                        .requestMatchers("/Login_Register/**", "/User/Show_Services/**", "/Images/*" , "/csrf", "/js/csrf.js", "/signup").permitAll()
+                        .requestMatchers("/Admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/User/**").authenticated() //it doesn't matter if ADMIN has access to this
                         .anyRequest().authenticated()
                 )
                 .formLogin((form) -> form
@@ -37,10 +37,8 @@ public class SecurityConfig {
                         .permitAll()
                 )
                 .logout((logout) -> logout
-                        .logoutSuccessUrl("/")
-                        .invalidateHttpSession(true)
+                        .logoutSuccessUrl("/User/Show_Services/show_services.html")
                         .deleteCookies("JSESSIONID")
-                        .logoutSuccessHandler(logout.getLogoutSuccessHandler())
                 );
         return http.build();
     }
