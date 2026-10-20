@@ -28,7 +28,7 @@ public class SecurityConfig {
         http.csrf(Customizer.withDefaults());
         http.authorizeHttpRequests((requests) -> requests
                         .dispatcherTypeMatchers(FORWARD,ERROR).permitAll()
-                        .requestMatchers("/Login_Register/**", "/User/Show_Services/**", "/Images/*" , "/csrf", "/js/csrf.js", "/signup", "/manageservices/services").permitAll()
+                        .requestMatchers("/Login_Register/**", "/User/Show_Services/**", "/Images/*" , "/csrf", "/js/csrf.js", "/signup", "/manageservices/services", "/user" , "/navigation_bar.js").permitAll()
                         .requestMatchers("/manageservices/trainers" , "/manageservices/services").authenticated()
                         .requestMatchers("/Admin/**" , "/request/**" , "/manageusers/**", "/manageservices/**" , "/uploadimage").hasAuthority("ADMIN")
                         .requestMatchers("/managearticles/create", "/managearticles/change" , "/managearticles/delete/**").hasAuthority("ADMIN")

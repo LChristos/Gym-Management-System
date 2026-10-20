@@ -9,7 +9,7 @@ function fetch_trainers() {//Fetch all the trainers and save them in the variabl
         .catch(error => console.error('Error fetching trainers:', error));
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+function loadData(){
     fetch_trainers();
     fetch('http://localhost:8080/manageservices/services')//Take the services
         .then(response => response.json())
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 let service_section = document.createElement('div');
                 service_section.className = 'service_section';
                 //Show Services
-                if(window.userRole === "user"){
+                if(window.userRole === "USER"){
                     service_section.innerHTML = `
                         <img src="${service.url_image}" alt="${service.name} image" class="service_image" />
                         <div class="card_content">
@@ -72,5 +72,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         })
         .catch(error => console.error('Error fetching services:', error));
-});
+}
 
+if (window.userId !== undefined) {
+    loadData();
+} else {
+    window.addEventListener("userLoaded", loadData, { once: true });
+}

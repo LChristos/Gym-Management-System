@@ -6,7 +6,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 public class UserPrincipal implements UserDetails {
 
@@ -19,12 +18,13 @@ public class UserPrincipal implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {//What authority this specific User will have, put default as user for now
         String role = user.getRole();
+        if (role == null ){
+            return Collections.singleton(new SimpleGrantedAuthority("VISITOR"));
+        }
         if (role.equalsIgnoreCase("admin")){
             return Collections.singleton(new SimpleGrantedAuthority("ADMIN"));
-        }else if (role.equalsIgnoreCase("user")){
-            return Collections.singleton(new SimpleGrantedAuthority("USER"));
         }
-        return Collections.singleton(new SimpleGrantedAuthority("VISITOR"));
+        return Collections.singleton(new SimpleGrantedAuthority("USER"));
     }
 
     @Override
@@ -35,6 +35,10 @@ public class UserPrincipal implements UserDetails {
     @Override
     public String getUsername() {
         return user.getUsername();
+    }
+
+    public Long getId(){
+        return user.getId();
     }
 
     @Override

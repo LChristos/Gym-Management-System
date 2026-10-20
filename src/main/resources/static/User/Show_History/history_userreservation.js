@@ -20,7 +20,7 @@ function fetch_services() {
         .catch(error => console.error('Error fetching trainers:', error));
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+function loadData(){
     fetch_trainers();
     fetch_services();
     fetch('http://localhost:8080/reservations/' + window.userId )
@@ -76,4 +76,9 @@ document.addEventListener('DOMContentLoaded', function() {
         reservation_div.appendChild(table);
     })
     .catch(error => console.log('Error:' , error));
-});
+}
+if (window.userId !== undefined) {
+    loadData();
+} else {
+    window.addEventListener("userLoaded", loadData, { once: true });
+}
