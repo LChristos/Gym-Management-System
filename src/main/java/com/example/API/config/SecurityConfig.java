@@ -12,6 +12,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static jakarta.servlet.DispatcherType.ERROR;
+import static jakarta.servlet.DispatcherType.FORWARD;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -24,8 +27,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(Customizer.withDefaults());
         http.authorizeHttpRequests((requests) -> requests
-                        .requestMatchers("/Login_Register/**", "/User/Show_Services/**", "/Images/*" , "/csrf", "/js/csrf.js", "/signup").permitAll()
-                        .requestMatchers("/Admin/**").hasAuthority("ADMIN")
+                        .dispatcherTypeMatchers(FORWARD,ERROR).permitAll()
+                        .requestMatchers("/Login_Register/**", "/User/Show_Services/**", "/Images/*" , "/csrf", "/js/csrf.js", "/signup", "/manageservices/services").permitAll()
+                        .requestMatchers("/manageservices/trainers" , "/manageservices/services").authenticated()
+                        .requestMatchers("/Admin/**" , "/request/**" , "/manageusers/**", "/manageservices/**" , "/uploadimage").hasAuthority("ADMIN")
+                        .requestMatchers("/managearticles/create", "/managearticles/change" , "/managearticles/delete/**").hasAuthority("ADMIN")
                         .requestMatchers("/User/**").authenticated() //it doesn't matter if ADMIN has access to this
                         .anyRequest().authenticated()
                 )
@@ -42,25 +48,7 @@ public class SecurityConfig {
                 );
         return http.build();
     }
-//    @Bean Inmemory example
-//    public UserDetailsService userDetailsService(){
-//
-//        UserDetails user1 = User
-//                .withDefaultPasswordEncoder()
-//                .username("kiram")
-//                .password("kiran123")
-//                .roles("USER")
-//                .build();
-//
-//        UserDetails user2 = User
-//                .withDefaultPasswordEncoder()
-//                .username("qaz")
-//                .password("qaz123")
-//                .roles("ADMIN")
-//                .build();
-//
-//        return new InMemoryUserDetailsManager(user1 , user2);
-//    }
+
     @Bean
     public AuthenticationProvider authenticationProvider(){
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
