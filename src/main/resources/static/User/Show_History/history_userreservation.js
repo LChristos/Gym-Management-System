@@ -23,7 +23,7 @@ function fetch_services() {
 function loadData(){
     fetch_trainers();
     fetch_services();
-    fetch('http://localhost:8080/reservations/' + window.userId )
+    fetch('http://localhost:8080/reservations')
     .then(response => response.json())
     .then(programs => {
         let reservation_div = document.getElementById('show_reservations');

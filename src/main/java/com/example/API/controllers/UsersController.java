@@ -20,6 +20,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -98,11 +99,11 @@ public class UsersController {
 
     // ---------- DTO <-> Entity mapping helper (Reservations) ----------
 
-    private UserReservations newReservationFromDTO(ReservationDTO dto) {
+    private UserReservations newReservationFromDTO(ReservationDTO dto , Long userid) {
         Programs program = ProgramsRepository.findById(dto.getProgramid()).orElseThrow(() ->
                 new NoSuchElementException("Program not found with id: " + dto.getProgramid()));
-        Users user = UsersRepository.findById(dto.getUserid()).orElseThrow(() ->
-                new NoSuchElementException("User not found with id: " + dto.getUserid()));
+        Users user = UsersRepository.findById(userid).orElseThrow(() ->
+                new NoSuchElementException("User not found with id: " + userid));
         return new UserReservations(program, user);
     }
 
@@ -405,11 +406,11 @@ public class UsersController {
         return new ResponseEntity<>(toProgramDTOList(services_program) , HttpStatus.OK);
     }
     //B.2
-    @GetMapping("/reservationsavailable/{userid}")//Show all the reservations available
-    public ResponseEntity<List<ProgramDTO>> ShowAllAvailableRes(@PathVariable Long userid){
+    @GetMapping("/reservationsavailable")//Show all the reservations available
+    public ResponseEntity<List<ProgramDTO>> ShowAllAvailableRes(@AuthenticationPrincipal UserPrincipal userPrincipal){
         List<Programs> availablePrograms;
         LocalDate today = LocalDate.now();
-        List<Long> userReservationsId = reservationsRepository.findAllProgramidFromUser(userid);
+        List<Long> userReservationsId = reservationsRepository.findAllProgramidFromUser(userPrincipal.getId());
         if(userReservationsId.isEmpty()){
             availablePrograms = ProgramsRepository.findReservationsAvailable(today);
         }
@@ -419,11 +420,11 @@ public class UsersController {
         return new ResponseEntity<>(toProgramDTOList(availablePrograms), HttpStatus.OK);
     }
 
-    @GetMapping("/reservationuser/{userid}")//Show all the program for the reservations that user has made for future
-    public ResponseEntity<List<ProgramDTO>> ShowNewReservations(@PathVariable Long userid){
+    @GetMapping("/reservationuser")//Show all the program for the reservations that user has made for future
+    public ResponseEntity<List<ProgramDTO>> ShowNewReservations(@AuthenticationPrincipal UserPrincipal userPrincipal){
         List<Programs> futureProgram;
         LocalDate today = LocalDate.now();
-        List<Long> userReservationsId = reservationsRepository.findAllProgramidFromUser(userid);
+        List<Long> userReservationsId = reservationsRepository.findAllProgramidFromUser(userPrincipal.getId());
         if(userReservationsId.isEmpty()){
             futureProgram = Collections.emptyList(); //return empty list
         }
@@ -434,8 +435,8 @@ public class UsersController {
     }
 
     @PostMapping("/reservations/create")//Create new reservation
-    public ResponseEntity<String> NewReservation(@RequestBody ReservationDTO resDto){
-        UserReservations res = newReservationFromDTO(resDto);
+    public ResponseEntity<String> NewReservation(@RequestBody ReservationDTO resDto , @AuthenticationPrincipal UserPrincipal userPrincipal){
+        UserReservations res = newReservationFromDTO(resDto , userPrincipal.getId());
         reservationsRepository.save(res);
         Programs theprogram = res.getProgram();
         theprogram.addpeople();
@@ -443,9 +444,9 @@ public class UsersController {
         return new ResponseEntity<>("Reservation submitted" , HttpStatus.OK);
     }
 
-    @DeleteMapping("/reservations/delete/{userid}/{programid}")//Cancel the specific reservation
-    public ResponseEntity<String> DeleteReservation(@PathVariable Long userid , @PathVariable Long programid){
-        UserReservations thereservation = reservationsRepository.findByUser_IdAndProgram_IdOrderByCreatedAtDesc(userid , programid);
+    @DeleteMapping("/reservations/delete/{programid}")//Cancel the specific reservation
+    public ResponseEntity<String> DeleteReservation(@PathVariable Long programid, @AuthenticationPrincipal UserPrincipal userPrincipal){
+        UserReservations thereservation = reservationsRepository.findByUser_IdAndProgram_IdOrderByCreatedAtDesc(userPrincipal.getId(), programid);
         if (thereservation == null) {
             return new ResponseEntity<>("Reservation not found", HttpStatus.NOT_FOUND);
         }
@@ -470,10 +471,10 @@ public class UsersController {
     }
 
     //B.3
-    @GetMapping("/reservations/{id}")//Show all the reservations of the user
-    public ResponseEntity<List<ProgramDTO>> ShowAllUserReservations(@PathVariable Long id){
+    @GetMapping("/reservations")//Show all the reservations of the user
+    public ResponseEntity<List<ProgramDTO>> ShowAllUserReservations(@AuthenticationPrincipal UserPrincipal userPrincipal){
         List<Programs> userPrograms;
-        List<Long> userReservationId = reservationsRepository.findAllProgramidFromUser(id);
+        List<Long> userReservationId = reservationsRepository.findAllProgramidFromUser(userPrincipal.getId());
         if(userReservationId.isEmpty()){
             userPrograms = Collections.emptyList();
         }

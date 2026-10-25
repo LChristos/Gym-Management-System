@@ -23,7 +23,7 @@ function fetch_services() {
 function loadData(){
     fetch_trainers();
     fetch_services();
-    fetch('http://localhost:8080/reservationsavailable/' +window.userId )
+    fetch('http://localhost:8080/reservationsavailable')
     .then(response => response.json())
     .then(programs => {
         let reservation_div = document.getElementById('reservations');
@@ -52,7 +52,6 @@ function loadData(){
             let program_row = document.createElement('tr');
             program_row.className = 'program_data';
             let formId = program.id;
-            userId = window.userId;
             // Create the user details
             let service_name = '';
             listofservices.forEach(service => {
@@ -74,7 +73,7 @@ function loadData(){
                     <td><span>${program.max_people}</span></td>
                     <td><span>${program.peoplereserve}</span></td>
                     <td>
-                        <button onclick="Make_Reservation('${program.id}' , '${userId}')">Make a Reservation</button>
+                        <button onclick="Make_Reservation('${program.id}')">Make a Reservation</button>
                     </td>`;
 
             program_row.innerHTML = program_details;
@@ -95,7 +94,7 @@ if (window.userId !== undefined) {
 }
 
 function reservations_todelete(){
-    fetch('http://localhost:8080/reservationuser/' +window.userId )
+    fetch('http://localhost:8080/reservationuser')
     .then(response => response.json())
     .then(programs => {
         let reservation_div = document.getElementById('reservations_made');
@@ -122,7 +121,6 @@ function reservations_todelete(){
                 let program_row = document.createElement('tr');
                 program_row.className = 'program_data';
                 let formId = program.id;
-                userId = window.userId;
                 // Create the user details
                 let service_name = '';
                 listofservices.forEach(service => {
@@ -142,7 +140,7 @@ function reservations_todelete(){
                         <td><span>${program.hour}</span></td>
                         <td><span>${trainer_name}</span></td>
                         <td>
-                            <button onclick="Delete_Reservation('${program.id}' , '${userId}')">Διαγραφή Κράτησης</button>
+                            <button onclick="Delete_Reservation('${program.id}')">Διαγραφή Κράτησης</button>
                         </td>`;
 
                 program_row.innerHTML = program_details;
@@ -156,13 +154,12 @@ function reservations_todelete(){
     .catch(error => console.log('Error:' , error));
 }
 
-function Delete_Reservation(programid , userid){
+function Delete_Reservation(programid){
     let res_data= {
         programid: programid,
-        userid: userid
     }
     csrfReady.then(() =>
-        fetch('http://localhost:8080/reservations/delete/' + userid +"/" + programid , {
+        fetch('http://localhost:8080/reservations/delete/'+ programid , {
             method: 'DELETE' ,
             headers: {
                 'Content-Type': 'application/json' ,
@@ -193,10 +190,9 @@ function Delete_Reservation(programid , userid){
 
 
 
-function Make_Reservation(programId , userId){
+function Make_Reservation(programId){
     let res_data= {
         programid: programId,
-        userid: userId
     }
     csrfReady.then(() =>
         fetch('http://localhost:8080/reservations/create' , {
