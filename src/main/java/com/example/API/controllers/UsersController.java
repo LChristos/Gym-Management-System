@@ -13,6 +13,7 @@ import java.io.IOException;
 
 import com.example.API.dto.ProgramDTO;
 import com.example.API.dto.ReservationDTO;
+import com.example.API.dto.UsersDTO;
 import com.example.API.models.*;
 import com.example.API.Repositories.*;
 import org.springframework.dao.DuplicateKeyException;
@@ -77,6 +78,24 @@ public class UsersController {
         return new Programs(service, dto.getProgramdate(), dto.getHour(), trainer, dto.getMax_people());
     }
 
+    private UsersDTO toUsersDTO(Users user){
+        UsersDTO dto = new UsersDTO();
+        dto.setId(user.getId());
+        dto.setName(user.getName());
+        dto.setSurname(user.getSurname());
+        dto.setCountry(user.getCountry());
+        dto.setTown(user.getTown());
+        dto.setAddress(user.getAddress());
+        dto.setEmail(user.getEmail());
+        dto.setUsername(user.getUsername());
+        dto.setRole(user.getRole());
+        return dto;
+    }
+
+    private List<UsersDTO> toUsersDTOList(List<Users> users){
+        return users.stream().map(this::toUsersDTO).collect(Collectors.toList());
+    }
+
     // ---------- DTO <-> Entity mapping helper (Reservations) ----------
 
     private UserReservations newReservationFromDTO(ReservationDTO dto) {
@@ -97,6 +116,9 @@ public class UsersController {
             }
             else {
                 user.setPassword(encoder.encode(user.getPassword()));
+                user.setRole("user");
+                user.setAccepted(false);
+                user.setId(null);
                 UsersRepository.save(user);
                 return new ResponseEntity<>("Επιτυχής Εγγραφή ", HttpStatus.OK);
             }
@@ -109,9 +131,9 @@ public class UsersController {
 
     //ADMIN
     @GetMapping("/request")//Give all the users with accepted == false
-    public ResponseEntity<List<Users>> NotAccepted(){
+    public ResponseEntity<List<UsersDTO>> NotAccepted(){
         List<Users> user_request = UsersRepository.findByAcceptedFalse();
-        return new ResponseEntity<>(user_request , HttpStatus.OK);
+        return new ResponseEntity<>(toUsersDTOList(user_request) , HttpStatus.OK);
     }
 
     @PostMapping("/request/accepted/{id}")//Accept the user and i choose role
@@ -132,9 +154,9 @@ public class UsersController {
     }
 
     @GetMapping("/manageusers")//Show all the users that are accepted
-    public ResponseEntity<List<Users>> ShowAllUsers(){
+    public ResponseEntity<List<UsersDTO>> ShowAllUsers(){
         List<Users> all_users = UsersRepository.findByAcceptedTrue();
-        return new ResponseEntity<>(all_users , HttpStatus.OK);
+        return new ResponseEntity<>(toUsersDTOList(all_users) , HttpStatus.OK);
     }
 
     @PostMapping("/manageusers/change")//Change elements of the user (it needs to have also the id)

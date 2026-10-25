@@ -1,7 +1,5 @@
 package com.example.API.dto;
 
-// Wire-format shape kept identical to the old (pre-relations) UserReservations
-// entity: programid + userid stay flat, matching the pre-migration frontend contract.
 public class ReservationDTO {
     private Long id;
     private Long programid;
