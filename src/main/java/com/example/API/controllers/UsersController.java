@@ -15,13 +15,11 @@ import com.example.API.dto.ProgramDTO;
 import com.example.API.dto.ReservationDTO;
 import com.example.API.models.*;
 import com.example.API.Repositories.*;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
@@ -30,25 +28,29 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 public class UsersController {
+    private final UsersRepository UsersRepository;
 
-    @Autowired
-    private UsersRepository UsersRepository;
+    private final TrainersRepository trainersRepository;
 
-    @Autowired
-    private TrainersRepository trainersRepository;
+    private final ServicesRepository ServicesRepository;
 
-    @Autowired
-    private ServicesRepository ServicesRepository;
+    private final ProgramsRepository ProgramsRepository;
 
-    @Autowired
-    private ProgramsRepository ProgramsRepository;
+    private final ArticlesRepository ArticlesRepository;
 
-    @Autowired
-    private ArticlesRepository ArticlesRepository;
+    private final ReservationsRepository reservationsRepository;
 
-    @Autowired
-    private ReservationsRepository reservationsRepository;
-
+    private final PasswordEncoder encoder;
+    public UsersController(UsersRepository usersRepository, TrainersRepository trainersRepository, ServicesRepository servicesRepository,
+                           ProgramsRepository programsRepository, ArticlesRepository articlesRepository, ReservationsRepository reservationsRepository, PasswordEncoder passwordEncoder){
+        this.UsersRepository = usersRepository;
+        this.trainersRepository = trainersRepository;
+        this.ServicesRepository = servicesRepository;
+        this.ProgramsRepository = programsRepository;
+        this.ArticlesRepository = articlesRepository;
+        this.reservationsRepository = reservationsRepository;
+        this.encoder = passwordEncoder;
+    }
     // ---------- DTO <-> Entity mapping helpers (Programs) ----------
 
     private ProgramDTO toProgramDTO(Programs p) {
@@ -94,6 +96,7 @@ public class UsersController {
                 return new ResponseEntity<>("Αυτό το Όνομα Χρήστη υπάρχει", HttpStatus.CONFLICT);
             }
             else {
+                user.setPassword(encoder.encode(user.getPassword()));
                 UsersRepository.save(user);
                 return new ResponseEntity<>("Επιτυχής Εγγραφή ", HttpStatus.OK);
             }

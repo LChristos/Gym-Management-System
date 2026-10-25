@@ -95,6 +95,9 @@ document.getElementById('register').addEventListener('submit' , function(event) 
 if (new URLSearchParams(location.search).has('error')) {
     alert('Wrong Credentials');
 }
+if (new URLSearchParams(location.search).has('pending')) {
+            alert('Your account is waiting for admin approval.');
+}
 
 //Get the CSRF token
 fetch('http://localhost:8080/csrf' ,{

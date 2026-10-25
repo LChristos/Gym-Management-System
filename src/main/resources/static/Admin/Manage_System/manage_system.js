@@ -394,11 +394,21 @@ function display_programs(programs) {
 }
 //Delete specific schedule from the program
 function Delete_program(programId){
-    fetch('http://localhost:8080/manageservices/program/delete/' + programId, { method: 'DELETE' })
-        .then(response => response.text())
-        .then(message => {
-            alert(message);
-            fetchdataprogram();  //Refresh list
-        })
-        .catch(error => console.error('Error:', error));
+    csrfReady.then(() =>
+        fetch('http://localhost:8080/manageservices/program/delete/' + programId, {
+            method: 'DELETE' ,
+            headers: {'X-CSRF-TOKEN': csrfToken}})
+    )
+    .then(response => {
+        return response.text().then(message => {
+          if(!response.ok){
+              throw new Error(message);
+          }
+          return message;})
+    })
+    .then(message => {
+        alert(message);
+        fetchdataprogram();  //Refresh list
+    })
+    .catch(error => console.error('Error:', error));
 }

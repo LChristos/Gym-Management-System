@@ -63,7 +63,7 @@ function accept_user(userId) {//To accept the user
     csrfReady.then(() =>
         fetch('http://localhost:8080/request/accepted/' + userId, {
             method: 'POST' ,
-            header: {'X-CSRF-TOKEN': csrfToken}})
+            headers: {'X-CSRF-TOKEN': csrfToken}})
     )
     .then(response => {
         if(!response.ok){

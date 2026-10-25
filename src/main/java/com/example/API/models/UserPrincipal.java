@@ -18,9 +18,6 @@ public class UserPrincipal implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {//What authority this specific User will have, put default as user for now
         String role = user.getRole();
-        if (role == null ){
-            return Collections.singleton(new SimpleGrantedAuthority("VISITOR"));
-        }
         if (role.equalsIgnoreCase("admin")){
             return Collections.singleton(new SimpleGrantedAuthority("ADMIN"));
         }
@@ -58,6 +55,6 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return user.getAccepted();
     }
 }

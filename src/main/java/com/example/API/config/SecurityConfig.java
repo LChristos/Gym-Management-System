@@ -1,16 +1,20 @@
 package com.example.API.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.ExceptionMappingAuthenticationFailureHandler;
+import java.util.Map;
 
 import static jakarta.servlet.DispatcherType.ERROR;
 import static jakarta.servlet.DispatcherType.FORWARD;
@@ -19,12 +23,14 @@ import static jakarta.servlet.DispatcherType.FORWARD;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private UserDetailsService userDetailsService;
+    private final UserDetailsService userDetailsService;
 
+    public SecurityConfig(UserDetailsService userDetailsService){
+        this.userDetailsService= userDetailsService;
+    }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationFailureHandler loginFailureHandler) throws Exception {
         http.csrf(Customizer.withDefaults());
         http.authorizeHttpRequests((requests) -> requests
                         .dispatcherTypeMatchers(FORWARD,ERROR).permitAll()
@@ -39,7 +45,7 @@ public class SecurityConfig {
                         .loginPage("/Login_Register/newuser.html")
                         .loginProcessingUrl("/Login_Register/process-login")
                         .defaultSuccessUrl("/User/Show_Services/show_services.html", true)
-                        .failureUrl("/Login_Register/newuser.html?error=true")
+                        .failureHandler(loginFailureHandler)
                         .permitAll()
                 )
                 .logout((logout) -> logout
@@ -50,10 +56,29 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider(){
+    public AuthenticationFailureHandler loginFailureHandler() {
+        ExceptionMappingAuthenticationFailureHandler handler = new ExceptionMappingAuthenticationFailureHandler();
+        handler.setExceptionMappings(Map.of(
+                DisabledException.class.getName(),
+                "/Login_Register/newuser.html?pending"
+        ));
+
+        handler.setDefaultFailureUrl(
+                "/Login_Register/newuser.html?error=true"
+        );
+        return handler;
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider(PasswordEncoder passwordEncoder){
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(NoOpPasswordEncoder.getInstance());
+        provider.setPasswordEncoder(passwordEncoder);
         provider.setUserDetailsService(userDetailsService);
         return provider;
+    }
+
+    @Bean
+    public PasswordEncoder getPasswordEncoder(){
+        return new BCryptPasswordEncoder(12);
     }
 }
