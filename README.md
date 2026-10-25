@@ -51,7 +51,6 @@ A full-stack gym management application built with a Spring Boot REST API backed
 - **Repositories/** – Spring Data JPA repositories for each entity
 - **dto/** – `ProgramDTO` / `ReservationDTO`, decoupling the relational model from the flat JSON shape the frontend consumes
 - **UsersController.java** – all REST endpoints
-- **WebConfig.java** – CORS and static resource (uploaded images) configuration
 - **ApiApplication.java** – Spring Boot entry point
 
 ### Frontend
@@ -78,7 +77,7 @@ docker exec -i gym-mysql mysql --default-character-set=utf8mb4 -u root -psecret 
 > **Note:** signing up through the app can only ever produce a regular member — approval always assigns the `user` role, and promoting someone to `admin` requires an admin to already be logged in to do it. On a fresh database with no sample data, there's no self-service way to create the first admin account. Either load the sample data above, which includes a ready-to-use demo admin login (`admin` / `admin123`), or register normally and promote yourself directly in the database: `UPDATE users SET role='admin', accepted=1 WHERE username='yourusername';`
 
 **4. Serve the frontend**
-The frontend is a set of static HTML/JS files that call the API at `localhost:8080`. Serve them through a local static server (e.g. IntelliJ's built-in web server) rather than opening the files directly, so cookies and CORS behave consistently. Start at `Login_Register/newuser.html`.
+Spring Boot serves the frontend directly from `src/main/resources/static`. With the application running, open `http://localhost:8080/Login_Register/newuser.html`. Frontend requests use root-relative URLs.
 
 ## How to Use the System
 
