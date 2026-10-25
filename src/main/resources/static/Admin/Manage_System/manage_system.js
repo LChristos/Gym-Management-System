@@ -14,7 +14,7 @@ function fetch_trainers() {
         .then(trainers => {
             listoftrainers = trainers;
         })
-        .catch(error => console.error('Error fetching trainers:', error));
+        .catch(error => {console.error('Error fetching trainers:', error); throw error; });
 }
 
 let listofservices = [];//List of the services for the program
@@ -25,7 +25,7 @@ function fetch_services() {
         .then(services => {
             listofservices = services;
         })
-        .catch(error => console.error('Error fetching trainers:', error));
+        .catch(error => {console.error('Error fetching trainers:', error); throw error; });
 }
 
 

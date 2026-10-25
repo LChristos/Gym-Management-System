@@ -1,28 +1,32 @@
 let listoftrainers = [];//list of trainers for the program
 
 function fetch_trainers() {
-    fetch('/manageservices/trainers', { credentials: 'include' })
+    return fetch('/manageservices/trainers', { credentials: 'include' })
         .then(response => response.json())
         .then(trainers => {
             listoftrainers = trainers;
         })
-        .catch(error => console.error('Error fetching trainers:', error));
+        .catch(error => {console.error('Error fetching trainers:', error); throw error; });
 }
 
 let listofservices = [];
 
 function fetch_services() {
-    fetch('/manageservices/services', { credentials: 'include' })
+    return fetch('/manageservices/services', { credentials: 'include' })
         .then(response => response.json())
         .then(services => {
             listofservices = services;
         })
-        .catch(error => console.error('Error fetching trainers:', error));
+        .catch(error => {console.error('Error fetching trainers:', error); throw error; });
 }
 
 function loadData(){
-    fetch_trainers();
-    fetch_services();
+    Promise.all([fetch_trainers(), fetch_services()])
+        .then(() => reservationsavailable())
+        .catch(error => console.error('Error loading trainers/services before reservations:', error));
+}
+
+function reservationsavailable(){
     fetch('/reservationsavailable')
     .then(response => response.json())
     .then(programs => {
