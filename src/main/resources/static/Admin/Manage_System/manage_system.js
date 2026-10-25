@@ -9,7 +9,7 @@ window.addEventListener('DOMContentLoaded', function() {
 let listoftrainers = [];//list of trainers for the program
 
 function fetch_trainers() {
-    return fetch('http://localhost:8080/manageservices/trainers', { credentials: 'include' })
+    return fetch('/manageservices/trainers', { credentials: 'include' })
         .then(response => response.json())
         .then(trainers => {
             listoftrainers = trainers;
@@ -20,7 +20,7 @@ function fetch_trainers() {
 let listofservices = [];//List of the services for the program
 
 function fetch_services() {
-    return fetch('http://localhost:8080/manageservices/services', { credentials: 'include' })
+    return fetch('/manageservices/services', { credentials: 'include' })
         .then(response => response.json())
         .then(services => {
             listofservices = services;
@@ -31,7 +31,7 @@ function fetch_services() {
 
 //CRUD FOR TRAINERS
 function fetchdatatrainer(){//fetch trainers
-    fetch('http://localhost:8080/manageservices/trainers')
+    fetch('/manageservices/trainers')
     .then((response) => response.json())
     .then(trainers => display_trainers(trainers))
     .catch(error => console.error('Error:' , error))
@@ -78,7 +78,7 @@ function display_trainers(trainers) {
         //Creation of the form for trainer changes
         let form_data = document.createElement('form');
         form_data.id = formId;
-        form_data.action = "http://localhost:8080/manageservices/trainers/change";
+        form_data.action = "/manageservices/trainers/change";
         form_data.method = "post";
         form_data.style.display = "none";
         table_body.appendChild(form_data);
@@ -100,7 +100,7 @@ function display_trainers(trainers) {
                 };
 
                 csrfReady.then(() =>
-                    fetch('http://localhost:8080/manageservices/trainers/change', {
+                    fetch('/manageservices/trainers/change', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json' ,// Required for POST
@@ -129,11 +129,15 @@ function display_trainers(trainers) {
 //Delete Trainer
 function Delete_trainer(trainerId){
     csrfReady.then(() =>
-        fetch('http://localhost:8080/manageservices/trainers/delete/' + trainerId,
+        fetch('/manageservices/trainers/delete/' + trainerId,
             { method: 'DELETE' ,
                 headers: {'X-CSRF-TOKEN': csrfToken}})
     )
-    .then(response => response.text())
+    .then(response => {
+        if(!response.ok){
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        return response.text()})
     .then(message => {
         alert(message);
         fetchdatatrainer();  //Refresh list
@@ -144,7 +148,7 @@ function Delete_trainer(trainerId){
 //CRUD FOR THE SERVICES
 
 function fetchdataservice(){//Fetch services
-    fetch('http://localhost:8080/manageservices/services', { credentials: 'include' })
+    fetch('/manageservices/services', { credentials: 'include' })
     .then((response) => response.json())
     .then(services => display_services(services))
     .catch(error => console.error('Error:' , error))
@@ -194,7 +198,7 @@ function display_services(services) {
         //Creation of the form for users changes
         let form_data = document.createElement('form');
         form_data.id = formId;
-        form_data.action = "http://localhost:8080/manageservices/services/change";
+        form_data.action = "/manageservices/services/change";
         form_data.method = "post";
         form_data.style.display = "none";
         table_body.appendChild(form_data);
@@ -218,7 +222,7 @@ function display_services(services) {
                 };
 
                 csrfReady.then(() =>
-                    fetch('http://localhost:8080/manageservices/services/change', {
+                    fetch('/manageservices/services/change', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json' ,// Required for POST
@@ -248,7 +252,7 @@ function display_services(services) {
 //Delete Service
 function Delete_service(serviceId){
     csrfReady.then(() =>
-        fetch('http://localhost:8080/manageservices/services/delete/' + serviceId,
+        fetch('/manageservices/services/delete/' + serviceId,
             { method: 'DELETE' ,
                 headers: {'X-CSRF-TOKEN': csrfToken}})
     )
@@ -267,7 +271,7 @@ function Delete_service(serviceId){
 //CRUD FOR PROGRAM
 
 function fetchdataprogram(){//Fetch only schedule from today and after
-    fetch('http://localhost:8080/manageservices/program/futures')
+    fetch('/manageservices/program/futures')
     .then((response) => response.json())
     .then(programs => display_programs(programs))
     .catch(error => console.error('Error:' , error))
@@ -337,7 +341,7 @@ function display_programs(programs) {
         //Creation of the form for program changes
         let form_data = document.createElement('form');
         form_data.id = formId;
-        form_data.action = "http://localhost:8080/manageservices/program/change";
+        form_data.action = "/manageservices/program/change";
         form_data.method = "post";
         form_data.style.display = "none";
         table_body.appendChild(form_data);
@@ -366,7 +370,7 @@ function display_programs(programs) {
 
                 // Example of sending data via fetch API
                 csrfReady.then(() =>
-                    fetch('http://localhost:8080/manageservices/program/change', {
+                    fetch('/manageservices/program/change', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json' ,// Required for POST
@@ -395,7 +399,7 @@ function display_programs(programs) {
 //Delete specific schedule from the program
 function Delete_program(programId){
     csrfReady.then(() =>
-        fetch('http://localhost:8080/manageservices/program/delete/' + programId, {
+        fetch('/manageservices/program/delete/' + programId, {
             method: 'DELETE' ,
             headers: {'X-CSRF-TOKEN': csrfToken}})
     )

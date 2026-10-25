@@ -14,7 +14,7 @@ document.getElementById('add').addEventListener('submit' , function(event) {
             }
 
             return csrfReady.then(() =>
-                fetch('http://localhost:8080/manageservices/services/create' , {
+                fetch('/manageservices/services/create' , {
                     method: 'POST' ,
                     headers: {
                         'Content-Type': 'application/json' ,
@@ -48,7 +48,7 @@ function upload_image(file){
     form_data.append("image", file);
 
     return csrfReady.then(() =>
-        fetch('http://localhost:8080/uploadimage', {
+        fetch('/uploadimage', {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': csrfToken

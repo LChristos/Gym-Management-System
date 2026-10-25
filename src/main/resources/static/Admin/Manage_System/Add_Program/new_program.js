@@ -1,7 +1,7 @@
 //Get services
 let services_list = document.getElementById("name");
 
-fetch('http://localhost:8080/manageservices/services')
+fetch('/manageservices/services')
 .then((response) => response.json())
 .then(data => {
     data.forEach(service => {
@@ -24,7 +24,7 @@ services_list.addEventListener('change' , () => {
 //Get trainer
 let trainer_list = document.getElementById("trainer");
 
-fetch('http://localhost:8080/manageservices/trainers')
+fetch('/manageservices/trainers')
 .then((response) => response.json())
 .then(data => {
     data.forEach(trainer => {
@@ -52,7 +52,7 @@ document.getElementById('add').addEventListener('submit' , function(event) {
     }
 
     csrfReady.then(() =>
-        fetch('http://localhost:8080/manageservices/program/create' , {
+        fetch('/manageservices/program/create' , {
             method: 'POST' ,
             headers: {
                 'Content-Type': 'application/json' ,

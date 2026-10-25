@@ -1,7 +1,7 @@
 let listoftrainers = [];//list of trainers for the program
 
 function fetch_trainers() {//Fetch all the trainers and save them in the variable listoftrainers
-    fetch('http://localhost:8080/manageservices/trainers', { credentials: 'include' })
+    fetch('/manageservices/trainers', { credentials: 'include' })
         .then(response => response.json())
         .then(trainers => {
             listoftrainers = trainers;
@@ -11,7 +11,7 @@ function fetch_trainers() {//Fetch all the trainers and save them in the variabl
 
 function loadData(){
     fetch_trainers();
-    fetch('http://localhost:8080/manageservices/services')//Take the services
+    fetch('/manageservices/services')//Take the services
         .then(response => response.json())
         .then(services => {
             let service_div = document.getElementById('services');
@@ -29,7 +29,7 @@ function loadData(){
                             <div id="program_${service.id}"></div>
                         </div>`;
                     //Take this week's program for each service
-                    fetch(`http://localhost:8080/service/show/${service.id}`)
+                    fetch(`/service/show/${service.id}`)
                     .then(response => response.json())
                     .then(programs => {
                         let program_div = '';

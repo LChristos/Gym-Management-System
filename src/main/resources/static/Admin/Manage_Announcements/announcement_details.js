@@ -4,7 +4,7 @@ let id = parameters.get('id');
 let announcement_title = document.getElementById('title');
 let announcement_body = document.getElementById('body');
 
-fetch('http://localhost:8080/managearticles/' + id, { method: 'GET' })
+fetch('/managearticles/' + id, { method: 'GET' })
 .then(response => response.json())
 .then(data => {
     announcement_title.value = data.title;
@@ -21,7 +21,7 @@ document.getElementById('announcement_info').addEventListener('submit' , functio
     }
 
     csrfReady.then(() =>
-        fetch('http://localhost:8080/managearticles/change' , {
+        fetch('/managearticles/change' , {
             method: 'POST' ,
             headers: {
                 'Content-Type': 'application/json' ,

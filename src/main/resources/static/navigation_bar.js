@@ -27,7 +27,7 @@ fetch('/user')
                 <form id="logout" method="post" action="/logout"
                      style="display: inline-block; margin: 0;">
                     <button type="submit">Logout</button>
-                    <input type="hidden" id="csrfToken" name="_csrf" value=""/>
+                    <input type="hidden" id="csrfTokenLogout" name="_csrf" value=""/>
                 </form>
             </ul>
         </nav>`;
@@ -45,7 +45,7 @@ fetch('/user')
                 <form id="logout" method="post" action="/logout"
                     style="display: inline-block; margin: 0;">
                     <button type="submit">Logout</button>
-                    <input type="hidden" id="csrfToken" name="_csrf" value=""/>
+                    <input type="hidden" id="csrfTokenLogout" name="_csrf" value=""/>
                 </form>
             </ul>
         </nav>`;
@@ -70,7 +70,7 @@ fetch('/user')
                     <form id="logout" method="post" action="/logout"
                         style="display: inline-block; margin: 0;">
                         <button type="submit">Logout</button>
-                        <input type="hidden" id="csrfToken" name="_csrf" value=""/>
+                        <input type="hidden" id="csrfTokenLogout" name="_csrf" value=""/>
                     </form>
                 </ul>
             </nav>`;
@@ -79,13 +79,13 @@ fetch('/user')
 
 
     //Get the CSRF token
-    if (document.getElementById("csrfToken") != null){
-        fetch('http://localhost:8080/csrf' ,{
+    if (document.getElementById("csrfTokenLogout") != null){
+        fetch('/csrf' ,{
             method: 'GET' ,
         })
             .then(r => r.json())
             .then(data => {
-                document.getElementById("csrfToken").value = data.token;
+                document.getElementById("csrfTokenLogout").value = data.token;
             });
     }
 })

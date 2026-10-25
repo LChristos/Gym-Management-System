@@ -1,6 +1,6 @@
 window.onload = fetcharticles();
 function fetcharticles(){
-    fetch('http://localhost:8080/managearticles')
+    fetch('/managearticles')
     .then(response => response.json())
     .then(data => {
         let articles = document.getElementById('announcements');

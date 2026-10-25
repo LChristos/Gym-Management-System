@@ -6,7 +6,7 @@ document.getElementById('add').addEventListener('submit' , function(event) {
     }
 
     csrfReady.then(() =>
-        fetch('http://localhost:8080/manageservices/trainers/create' , {
+        fetch('/manageservices/trainers/create' , {
             method: 'POST' ,
             headers: {
                 'Content-Type': 'application/json' ,

@@ -1,7 +1,7 @@
 let listoftrainers = [];//List of trainers for the program
 
 function fetch_trainers() {
-    fetch('http://localhost:8080/manageservices/trainers', { credentials: 'include' })
+    fetch('/manageservices/trainers', { credentials: 'include' })
         .then(response => response.json())
         .then(trainers => {
             listoftrainers = trainers;
@@ -12,7 +12,7 @@ function fetch_trainers() {
 let listofservices = [];//List of services for the program
 
 function fetch_services() {
-    fetch('http://localhost:8080/manageservices/services', { credentials: 'include' })
+    fetch('/manageservices/services', { credentials: 'include' })
         .then(response => response.json())
         .then(services => {
             listofservices = services;
@@ -23,7 +23,7 @@ function fetch_services() {
 function loadData(){
     fetch_trainers();
     fetch_services();
-    fetch('http://localhost:8080/reservations')
+    fetch('/reservations')
     .then(response => response.json())
     .then(programs => {
         let reservation_div = document.getElementById('show_reservations');

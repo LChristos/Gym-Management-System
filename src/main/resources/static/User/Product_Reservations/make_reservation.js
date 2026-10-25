@@ -1,7 +1,7 @@
 let listoftrainers = [];//list of trainers for the program
 
 function fetch_trainers() {
-    fetch('http://localhost:8080/manageservices/trainers', { credentials: 'include' })
+    fetch('/manageservices/trainers', { credentials: 'include' })
         .then(response => response.json())
         .then(trainers => {
             listoftrainers = trainers;
@@ -12,7 +12,7 @@ function fetch_trainers() {
 let listofservices = [];
 
 function fetch_services() {
-    fetch('http://localhost:8080/manageservices/services', { credentials: 'include' })
+    fetch('/manageservices/services', { credentials: 'include' })
         .then(response => response.json())
         .then(services => {
             listofservices = services;
@@ -23,7 +23,7 @@ function fetch_services() {
 function loadData(){
     fetch_trainers();
     fetch_services();
-    fetch('http://localhost:8080/reservationsavailable')
+    fetch('/reservationsavailable')
     .then(response => response.json())
     .then(programs => {
         let reservation_div = document.getElementById('reservations');
@@ -94,7 +94,7 @@ if (window.userId !== undefined) {
 }
 
 function reservations_todelete(){
-    fetch('http://localhost:8080/reservationuser')
+    fetch('/reservationuser')
     .then(response => response.json())
     .then(programs => {
         let reservation_div = document.getElementById('reservations_made');
@@ -159,7 +159,7 @@ function Delete_Reservation(programid){
         programid: programid,
     }
     csrfReady.then(() =>
-        fetch('http://localhost:8080/reservations/delete/'+ programid , {
+        fetch('/reservations/delete/'+ programid , {
             method: 'DELETE' ,
             headers: {
                 'Content-Type': 'application/json' ,
@@ -195,7 +195,7 @@ function Make_Reservation(programId){
         programid: programId,
     }
     csrfReady.then(() =>
-        fetch('http://localhost:8080/reservations/create' , {
+        fetch('/reservations/create' , {
             method: 'POST' ,
             headers: {
                 'Content-Type': 'application/json' ,

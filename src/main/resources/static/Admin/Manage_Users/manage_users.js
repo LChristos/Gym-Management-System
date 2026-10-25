@@ -1,7 +1,7 @@
 
 window.onload = fetchdata();
 function fetchdata(){
-    fetch('http://localhost:8080/manageusers')
+    fetch('/manageusers')
     .then((response) => response.json())
     .then(users => display_users(users))
     .catch(error => console.error('Error:' , error))
@@ -65,7 +65,7 @@ function display_users(users) {
         //Creation of the form for users changes
         let form_data = document.createElement('form');
         form_data.id = formId;
-        form_data.action = "http://localhost:8080/manageusers/change";
+        form_data.action = "/manageusers/change";
         form_data.method = "post";
         form_data.style.display = "none";
         table_body.appendChild(form_data);
@@ -95,7 +95,7 @@ function display_users(users) {
                 console.log(data);
                 // Sending data via fetch API
                 csrfReady.then(() =>
-                    fetch('http://localhost:8080/manageusers/change', {
+                    fetch('/manageusers/change', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json' ,// Required for POST
@@ -125,11 +125,15 @@ function display_users(users) {
 
 function Delete_user(userId){
     csrfReady.then(() =>
-        fetch('http://localhost:8080/manageusers/delete/' + userId,
+        fetch('/manageusers/delete/' + userId,
             { method: 'DELETE' ,
                 headers: {'X-CSRF-TOKEN': csrfToken}})
     )
-    .then(response => response.text())
+    .then(response => {
+        if(!response.ok){
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        return response.text()})
     .then(message => {
         alert(message);
         fetchdata();  //Refresh list

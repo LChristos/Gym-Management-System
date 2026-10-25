@@ -57,7 +57,7 @@ document.getElementById('register').addEventListener('submit' , function(event) 
     };
 
     csrfReady.then(() =>
-        fetch('http://localhost:8080/signup' , {
+        fetch('/signup' , {
             method: 'POST' ,
             headers: {
                 'Content-Type': 'application/json' ,
@@ -100,7 +100,7 @@ if (new URLSearchParams(location.search).has('pending')) {
 }
 
 //Get the CSRF token
-fetch('http://localhost:8080/csrf' ,{
+fetch('/csrf' ,{
     method: 'GET' ,
 })
 .then(r => r.json())
@@ -109,39 +109,6 @@ fetch('http://localhost:8080/csrf' ,{
 });
 
 
-//When someone login
-/*document.getElementById('login').addEventListener('submit' , function(event) {
-    event.preventDefault();
-    let login_data= {
-        username : document.getElementById('login_username').value,
-        password: document.getElementById('login_password').value
-    }
-
-    fetch('http://localhost:8080/login' , {
-        method: 'POST' ,
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: login_data
-    })
-    .then(response => {
-        return response.text().then(message => {
-            if(!response.ok){
-                throw new Error(message);
-            }
-            return message;
-        });
-    })
-    .then(message => {
-        alert(message);
-        window.location.reload();
-    })
-    .catch(error => {
-        alert(error.message);
-        console.log('Error:' , error);
-    })
-})*/
 //After the login what to do depends on role
 if (window.userRole === "user") {
     window.location.href = "/User/Show_Announcements/announcement.html";

@@ -1,7 +1,7 @@
 
 window.onload = fetchdata();
 function fetchdata(){// Get all the user that the admin has not accept or reject
-    fetch('http://localhost:8080/request')
+    fetch('/request')
     .then((response) => response.json())
     .then(users => display_users(users))
     .catch(error => console.error('Error:' , error))
@@ -61,7 +61,7 @@ function display_users(users) {
 
 function accept_user(userId) {//To accept the user
     csrfReady.then(() =>
-        fetch('http://localhost:8080/request/accepted/' + userId, {
+        fetch('/request/accepted/' + userId, {
             method: 'POST' ,
             headers: {'X-CSRF-TOKEN': csrfToken}})
     )
@@ -79,7 +79,7 @@ function accept_user(userId) {//To accept the user
 
 function reject_user(userId) {//To reject and delete the user
     csrfReady.then(() =>
-        fetch('http://localhost:8080/request/denied/' + userId, {
+        fetch('/request/denied/' + userId, {
             method: 'DELETE' ,
             headers: {'X-CSRF-TOKEN': csrfToken}})
     )

@@ -1,6 +1,6 @@
 window.onload = fetcharticles();
 function fetcharticles(){
-    fetch('http://localhost:8080/managearticles')
+    fetch('/managearticles')
     .then(response => response.json())
     .then(data => {
         let articles = document.getElementById('announcements');
@@ -19,7 +19,7 @@ function fetcharticles(){
 
 function Delete_announcement(articleId){
     csrfReady.then(() =>
-        fetch('http://localhost:8080/managearticles/delete/' + articleId, {
+        fetch('/managearticles/delete/' + articleId, {
             method: 'DELETE' ,
             headers: {
                 'X-CSRF-TOKEN': csrfToken
@@ -44,7 +44,7 @@ document.getElementById('create_announcement').addEventListener('submit' , funct
         body: document.getElementById('new_body').value
     }
     csrfReady.then(() =>
-        fetch('http://localhost:8080/managearticles/create' , {
+        fetch('/managearticles/create' , {
             method: 'POST' ,
             headers: {
                 'Content-Type': 'application/json' ,
