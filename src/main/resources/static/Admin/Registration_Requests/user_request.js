@@ -39,19 +39,32 @@ function display_users(users) {
         user_row.className = 'user_data';
         //User's data
         let user_details = `
-            <td>${user.name}</td>
-            <td>${user.surname}</td>
-            <td>${user.country}</td>
-            <td>${user.town}</td>
-            <td>${user.address}</td>
-            <td>${user.email}</td>
-            <td>${user.username}</td>
+            <td class="user-name"></td>
+            <td class="user-surname"></td>
+            <td class="user-country"></td>
+            <td class="user-town"></td>
+            <td class="user-address"></td>
+            <td class="user-email"></td>
+            <td class="user-username"></td>
             <td>
-                <button onclick="accept_user('${user.id}')">Accept</button>
-                <button onclick="reject_user('${user.id}')" style="background-color: red;">Reject</button>
+                <button type="button" class= "accept-user" >Accept</button>
+                <button type="button" class= "reject-user" style="background-color: red;">Reject</button>
             </td>`;
 
         user_row.innerHTML = user_details;
+        user_row.querySelector('.user-name').textContent= user.name;
+        user_row.querySelector('.user-surname').textContent= user.surname;
+        user_row.querySelector('.user-country').textContent= user.country;
+        user_row.querySelector('.user-town').textContent= user.town;
+        user_row.querySelector('.user-address').textContent= user.address;
+        user_row.querySelector('.user-email').textContent= user.email;
+        user_row.querySelector('.user-username').textContent= user.username;
+        user_row.querySelector('.accept-user').addEventListener('click', () => {
+            accept_user(user.id);
+        });
+        user_row.querySelector('.reject-user').addEventListener('click', () => {
+            reject_user(user.id);
+        });
         table_body.appendChild(user_row);
     });
 

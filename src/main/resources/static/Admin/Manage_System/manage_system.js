@@ -65,14 +65,26 @@ function display_trainers(trainers) {
         let formId = 'trainer_' + trainer.id;
         // Create the trainer data
         let trainer_details = `
-                <td><input type="text" name="name" id="name_${trainer.id}" value="${trainer.name}" form="${formId}"/></td>
-                <td><input type="text" name="surname" id="surname_${trainer.id}" value="${trainer.surname}" form="${formId}"/></td>
+                <td><input type="text" name="name" class="trainer-name" /></td>
+                <td><input type="text" name="surname" class="trainer-surname" /></td>
                 <td>
-                    <button type="submit" form="${formId}">Change</button>
-                    <button onclick="Delete_trainer('${trainer.id}')">Delete</button>
+                    <button type="submit" class="change-trainer">Change</button>
+                    <button type="button" class="delete-trainer" >Delete</button>
                 </td>`;
 
         trainer_row.innerHTML = trainer_details;
+        const trainernameinput = trainer_row.querySelector('.trainer-name');
+        trainernameinput.id = `name_${trainer.id}`;
+        trainernameinput.value = trainer.name ?? '';
+        trainernameinput.setAttribute('form', String(formId));
+        const trainersurnameinput = trainer_row.querySelector('.trainer-surname');
+        trainersurnameinput.id = `surname_${trainer.id}`;
+        trainersurnameinput.value = trainer.surname ?? '';
+        trainersurnameinput.setAttribute('form', String(formId));
+        trainer_row.querySelector('.change-trainer').setAttribute('form', formId);
+        trainer_row.querySelector('.delete-trainer').addEventListener('click', () => {
+            Delete_trainer(trainer.id);
+        });
         table_body.appendChild(trainer_row);
 
         //Creation of the form for trainer changes
@@ -182,17 +194,46 @@ function display_services(services) {
         let service_row = document.createElement('tr');
         service_row.className = 'service_data';
         let formId = 'service_' + service.id;
+
         let service_details = `
-                <td><input type="text" name="service_name" id="service_name_${service.id}" value="${service.name}" form="${formId}"/></td>
-                <td><input type="text" name="description" id="description_${service.id}" value="${service.description}" form="${formId}"/></td>
-                <td><input type="number" name="price" id="price_${service.id}" value="${service.price}" form="${formId}"/></td>
-                <td><input type="number" name="max_people" id="max_people_${service.id}" value="${service.max_people}" form="${formId}"/></td>
-                <td>
-                    <button type="submit" form="${formId}">Change</button>
-                    <button onclick="Delete_service('${service.id}')">Delete</button>
-                </td>`;
+            <td><input type="text" name="service_name" class="service-name"></td>
+            <td><input type="text" name="description" class="service-description"></td>
+            <td><input type="number" name="price" class="service-price"></td>
+            <td><input type="number" name="max_people" class="service-people"></td>
+            <td>
+                <button type="submit" class="change-service">Change</button>
+                <button type="button" class="delete-service">Delete</button>
+            </td>
+        `;
 
         service_row.innerHTML = service_details;
+
+        const servicenameinput = service_row.querySelector('.service-name');
+        servicenameinput.id = `service_name_${service.id}`;
+        servicenameinput.value = service.name ?? '';
+        servicenameinput.setAttribute('form', formId);
+
+        const servicedescriptioninput = service_row.querySelector('.service-description');
+        servicedescriptioninput.id = `description_${service.id}`;
+        servicedescriptioninput.value = service.description ?? '';
+        servicedescriptioninput.setAttribute('form', formId);
+
+        const servicepriceinput = service_row.querySelector('.service-price');
+        servicepriceinput.id = `price_${service.id}`;
+        servicepriceinput.value = service.price ?? '';
+        servicepriceinput.setAttribute('form', formId);
+
+        const servicepeopleinput = service_row.querySelector('.service-people');
+        servicepeopleinput.id = `max_people_${service.id}`;
+        servicepeopleinput.value = service.max_people ?? '';
+        servicepeopleinput.setAttribute('form', formId);
+
+        service_row.querySelector('.change-service').setAttribute('form', formId);
+
+        service_row.querySelector('.delete-service').addEventListener('click', () => {
+            Delete_service(service.id);
+        });
+
         table_body.appendChild(service_row);
 
         //Creation of the form for users changes
@@ -306,36 +347,91 @@ function display_programs(programs) {
         let program_row = document.createElement('tr');
         program_row.className = 'program_data';
         let formId = 'program_' + program.id;
-        //List of trainers
-        let trainer_option = `<select id="trainer_id_${program.id}" name="trainer_id" form="${formId}">`;
-        listoftrainers.forEach(trainer => {
-           // If the trainer's id matches the program's trainer_id, mark it as selected.
-           trainer_option += `<option value="${trainer.id}" ${trainer.id === program.trainer_id ? 'selected' : ''}>${trainer.name} ${trainer.surname}</option>`;
-        });
-        trainer_option += `</select>`;
 
-        //List of services
-        let service_option = `<select id="services_name_${program.id}" name="services_name" form="${formId}">`;
-        listofservices.forEach(service => {
-           // If the service's id matches the program's service_name, mark it as selected.
-           service_option += `<option value="${service.id}" ${service.id === program.services_name ? 'selected' : ''}>${service.name}</option>`;
-        });
-        service_option += `</select>`;
-
-        // Create the program details
         let program_details = `
-                <td>${service_option}</td>
-                <td><input type="date" name="programdate" id="programdate_${program.id}" value="${program.programdate}" form="${formId}"/></td>
-                <td><input type="time" name="hour" id="hour_${program.id}" value="${program.hour}" form="${formId}"/></td>
-                <td>${trainer_option}</td>
-                <td><input type="number" name="services_max_people" id="services_max_people_${program.id}" value="${program.max_people}" form="${formId}"/></td>
-                <td><input type="number" name="peoplereserve" id="peoplereserve_${program.id}" value="${program.peoplereserve}" form="${formId}"/></td>
-                <td>
-                    <button type="submit" form="${formId}">Change</button>
-                    <button onclick="Delete_program('${program.id}')">Delete</button>
-                </td>`;
+            <td>
+                <select name="services_name" class="program-service"></select>
+            </td>
+            <td>
+                <input type="date" name="programdate" class="program-date">
+            </td>
+            <td>
+                <input type="time" name="hour" class="program-hour">
+            </td>
+            <td>
+                <select name="trainer_id" class="program-trainer"></select>
+            </td>
+            <td>
+                <input type="number" name="services_max_people" class="program-max-people">
+            </td>
+            <td>
+                <input type="number" name="peoplereserve" class="program-reservations">
+            </td>
+            <td>
+                <button type="submit" class="change-program">Change</button>
+                <button type="button" class="delete-program">Delete</button>
+            </td>
+        `;
 
         program_row.innerHTML = program_details;
+
+        // Service dropdown
+        const serviceSelect = program_row.querySelector('.program-service');
+        serviceSelect.id = `services_name_${program.id}`;
+        serviceSelect.setAttribute('form', formId);
+
+        listofservices.forEach(service => {
+            const option = document.createElement('option');
+            option.value = service.id;
+            option.textContent = service.name ?? '';
+            option.selected = service.id === program.services_name;
+            serviceSelect.appendChild(option);
+        });
+
+        // Trainer dropdown
+        const trainerSelect = program_row.querySelector('.program-trainer');
+        trainerSelect.id = `trainer_id_${program.id}`;
+        trainerSelect.setAttribute('form', formId);
+
+        listoftrainers.forEach(trainer => {
+            const option = document.createElement('option');
+            option.value = trainer.id;
+            option.textContent = `${trainer.name ?? ''} ${trainer.surname ?? ''}`.trim();
+            option.selected = trainer.id === program.trainer_id;
+            trainerSelect.appendChild(option);
+        });
+
+        // Date
+        const programdateinput = program_row.querySelector('.program-date');
+        programdateinput.id = `programdate_${program.id}`;
+        programdateinput.value = program.programdate ?? '';
+        programdateinput.setAttribute('form', formId);
+
+        // Time
+        const programhourinput = program_row.querySelector('.program-hour');
+        programhourinput.id = `hour_${program.id}`;
+        programhourinput.value = program.hour ?? '';
+        programhourinput.setAttribute('form', formId);
+
+        // Maximum people
+        const programmaxpeopleinput = program_row.querySelector('.program-max-people');
+        programmaxpeopleinput.id = `services_max_people_${program.id}`;
+        programmaxpeopleinput.value = program.max_people ?? '';
+        programmaxpeopleinput.setAttribute('form', formId);
+
+        // Reserved places
+        const programreservationsinput = program_row.querySelector('.program-reservations');
+        programreservationsinput.id = `peoplereserve_${program.id}`;
+        programreservationsinput.value = program.peoplereserve ?? '';
+        programreservationsinput.setAttribute('form', formId);
+
+        // Buttons
+        program_row.querySelector('.change-program').setAttribute('form', formId);
+
+        program_row.querySelector('.delete-program').addEventListener('click', () => {
+            Delete_program(program.id);
+        });
+
         table_body.appendChild(program_row);
 
         //Creation of the form for program changes

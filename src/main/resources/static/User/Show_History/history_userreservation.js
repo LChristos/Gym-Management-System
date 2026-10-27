@@ -67,12 +67,16 @@ function reservations(){
                 }
             });
             let program_details = `
-                    <td><span>${service_name}</span> </td>
-                    <td><span>${program.programdate}</span></td>
-                    <td><span>${program.hour}</span></td>
-                    <td><span>${trainer_name}</span></td>`;
+                    <td><span class="program-service"></span> </td>
+                    <td><span class="program-date"></span></td>
+                    <td><span class="program-hour"></span></td>
+                    <td><span class="program-trainer"></span></td>`;
 
             program_row.innerHTML = program_details;
+            program_row.querySelector('span.program-service').textContent = String(service_name);
+            program_row.querySelector('span.program-date').textContent = String(program.programdate);
+            program_row.querySelector('span.program-hour').textContent = String(program.hour);
+            program_row.querySelector('span.program-trainer').textContent = String(trainer_name);
             table_body.appendChild(program_row);
 
         });

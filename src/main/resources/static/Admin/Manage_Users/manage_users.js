@@ -41,25 +41,43 @@ function display_users(users) {
         let formId = user.id;
         // Create the user details HTML
         let user_details = `
-                <td><input type="text" name="name" id="name_${user.id}" value="${user.name}" form="${formId}"/></td>
-                <td><input type="text" name="surname" id="surname_${user.id}" value="${user.surname}" form="${formId}"/></td>
-                <td><input type="text" name="country" id="country_${user.id}" value="${user.country}" form="${formId}"/></td>
-                <td><input type="text" name="town" id="town_${user.id}" value="${user.town}" form="${formId}"/></td>
-                <td><input type="text" name="address" id="address_${user.id}" value="${user.address}" form="${formId}"/></td>
-                <td><input type="email" name="email" id="email_${user.id}" value="${user.email}" form="${formId}"/></td>
-                <td><input type="text" name="username" id="username_${user.id}" value="${user.username}" form="${formId}"/></td>
+                <td><input type="text" name="name" class="user-name"/></td>
+                <td><input type="text" name="surname" class="user-surname"/></td>
+                <td><input type="text" name="country" class="user-country"/></td>
+                <td><input type="text" name="town" class="user-town"/></td>
+                <td><input type="text" name="address" class="user-address"/></td>
+                <td><input type="email" name="email" class="user-email"/></td>
+                <td><input type="text" name="username" class="user-username"/></td>
                 <td>
-                    <select name="role" id="role_${user.id}" form="${formId}">
-                        <option value="user" ${user.role === 'user' ? 'selected' : ''}>user</option>
-                        <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>admin</option>
+                    <select name="role" class="user-role">
+                        <option value="user">user</option>
+                        <option value="admin">admin</option>
                     </select>
                 </td>
                 <td>
-                    <button type="submit" form="${formId}">Change</button>
-                    <button onclick="Delete_user('${user.id}')">Delete</button>
+                    <button type="submit" class="change-user">Change</button>
+                    <button type="button" class="delete-user">Delete</button>
                 </td>`;
 
         user_row.innerHTML = user_details;
+
+        ['name', 'surname', 'country', 'town', 'address', 'email', 'username'].forEach(field => {
+            const input = user_row.querySelector(`input.user-${field}`);
+            input.id = `${field}_${user.id}`;
+            input.value = String(user[field]);
+            input.setAttribute('form', String(formId));
+        });
+
+        const roleSelect = user_row.querySelector('select.user-role');
+        roleSelect.id = `role_${user.id}`;
+        roleSelect.value = user.role === 'admin' ? 'admin' : 'user';
+        roleSelect.setAttribute('form', String(formId));
+
+        user_row.querySelector('button.change-user').setAttribute('form', String(formId));
+        user_row.querySelector('button.delete-user').addEventListener('click', () => {
+            Delete_user(user.id);
+        });
+
         table_body.appendChild(user_row);
 
         //Creation of the form for users changes

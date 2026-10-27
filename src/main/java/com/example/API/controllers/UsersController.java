@@ -78,7 +78,7 @@ public class UsersController {
                 new NoSuchElementException("Trainer not found with id: " + dto.getTrainer_id()));
         return new Programs(service, dto.getProgramdate(), dto.getHour(), trainer, dto.getMax_people());
     }
-
+    // ---------- DTO <-> Entity mapping helpers (Users) ----------
     private UsersDTO toUsersDTO(Users user){
         UsersDTO dto = new UsersDTO();
         dto.setId(user.getId());

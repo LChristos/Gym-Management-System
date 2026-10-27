@@ -1,6 +1,5 @@
 package com.example.API.config;
 
-import com.example.API.Repositories.*;
 import com.example.API.filters.AuthenticationFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -30,13 +29,10 @@ public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
 
-    private final UsersRepository usersRepository;
-
     private final AuthenticationFilter authenticationFilter;
 
-    public SecurityConfig(UserDetailsService userDetailsService, UsersRepository usersRepository, AuthenticationFilter authenticationFilter){
+    public SecurityConfig(UserDetailsService userDetailsService, AuthenticationFilter authenticationFilter){
         this.userDetailsService= userDetailsService;
-        this.usersRepository = usersRepository;
         this.authenticationFilter = authenticationFilter;
     }
 

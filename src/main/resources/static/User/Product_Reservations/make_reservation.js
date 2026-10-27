@@ -70,17 +70,26 @@ function reservationsavailable(){
                 }
             });
             let program_details = `
-                    <td><span>${service_name}</span> </td>
-                    <td><span>${program.programdate}</span></td>
-                    <td><span>${program.hour}</span></td>
-                    <td><span>${trainer_name}</span></td>
-                    <td><span>${program.max_people}</span></td>
-                    <td><span>${program.peoplereserve}</span></td>
+                    <td><span class="program-service"></span> </td>
+                    <td><span class="program-date"></span></td>
+                    <td><span class="program-hour"></span></td>
+                    <td><span class="program-trainer"></span></td>
+                    <td><span class="program-max-people"></span></td>
+                    <td><span class="program-reservations"></span></td>
                     <td>
-                        <button onclick="Make_Reservation('${program.id}')">Make a Reservation</button>
+                        <button type="button" class="make-reservation">Make a Reservation</button>
                     </td>`;
 
             program_row.innerHTML = program_details;
+            program_row.querySelector('span.program-service').textContent = String(service_name);
+            program_row.querySelector('span.program-date').textContent = String(program.programdate);
+            program_row.querySelector('span.program-hour').textContent = String(program.hour);
+            program_row.querySelector('span.program-trainer').textContent = String(trainer_name);
+            program_row.querySelector('span.program-max-people').textContent = String(program.max_people);
+            program_row.querySelector('span.program-reservations').textContent = String(program.peoplereserve);
+            program_row.querySelector('button.make-reservation').addEventListener('click', () => {
+                Make_Reservation(program.id);
+            });
             table_body.appendChild(program_row);
 
         });
@@ -139,15 +148,22 @@ function reservations_todelete(){
                     }
                 });
                 let program_details = `
-                        <td><span>${service_name}</span> </td>
-                        <td><span>${program.programdate}</span></td>
-                        <td><span>${program.hour}</span></td>
-                        <td><span>${trainer_name}</span></td>
+                        <td><span class="program-service"></span> </td>
+                        <td><span class="program-date"></span></td>
+                        <td><span class="program-hour"></span></td>
+                        <td><span class="program-trainer"></span></td>
                         <td>
-                            <button onclick="Delete_Reservation('${program.id}')">Διαγραφή Κράτησης</button>
+                            <button type="button" class="delete-reservation">Διαγραφή Κράτησης</button>
                         </td>`;
 
                 program_row.innerHTML = program_details;
+                program_row.querySelector('span.program-service').textContent = String(service_name);
+                program_row.querySelector('span.program-date').textContent = String(program.programdate);
+                program_row.querySelector('span.program-hour').textContent = String(program.hour);
+                program_row.querySelector('span.program-trainer').textContent = String(trainer_name);
+                program_row.querySelector('button.delete-reservation').addEventListener('click', () => {
+                    Delete_Reservation(program.id);
+                });
                 table_body.appendChild(program_row);
 
             });
