@@ -18,12 +18,13 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -221,5 +222,48 @@ class LoginSecurityTest {
                 .andExpect(redirectedUrl("/Login_Register/newuser.html"))
                 .andExpect(unauthenticated());
         assertTrue(session.isInvalid());
+    }
+
+    @Test
+    void logoutInvalidatesSessionAndRemovesAuthentication() throws Exception{
+        MvcResult loginResult = mvc.perform(formLogin("/Login_Register/process-login")
+                        .user("approved-member")
+                        .password("password"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/User/Show_Services/show_services.html"))
+                .andExpect(authenticated().withUsername("approved-member"))
+                .andReturn();
+
+        MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);
+        assertNotNull(session);
+
+        mvc.perform(post("/logout").session(session).with(csrf()))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/User/Show_Services/show_services.html"))
+                .andExpect(unauthenticated());
+        assertTrue(session.isInvalid());
+    }
+
+    @Test
+    void logoutWithoutCsrfDoesNotEndAuthenticatedSession() throws Exception{
+        MvcResult loginResult = mvc.perform(formLogin("/Login_Register/process-login")
+                        .user("approved-member")
+                        .password("password"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/User/Show_Services/show_services.html"))
+                .andExpect(authenticated().withUsername("approved-member"))
+                .andReturn();
+
+        MockHttpSession session = (MockHttpSession) loginResult.getRequest().getSession(false);
+        assertNotNull(session);
+
+        mvc.perform(post("/logout").session(session))
+                .andExpect(status().isForbidden())
+                .andExpect(authenticated().withUsername("approved-member"));
+        assertFalse(session.isInvalid());
+
+        mvc.perform(get("/managearticles").session(session))
+                .andExpect(status().isOk())
+                .andExpect(authenticated().withUsername("approved-member"));
     }
 }
