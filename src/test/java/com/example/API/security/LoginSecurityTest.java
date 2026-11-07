@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Collections;
 
+import static org.hamcrest.Matchers.aMapWithSize;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -134,7 +135,9 @@ class LoginSecurityTest {
                 .andExpect(status().isOk())
                 .andExpect(authenticated().withUsername("approved-member"))
                 .andExpect(jsonPath("$.username").value("approved-member"))
-                .andExpect(jsonPath("$.role").value("USER"));
+                .andExpect(jsonPath("$.role").value("USER"))
+                .andExpect(jsonPath("$.id").value(savedUser.getId()))
+                .andExpect(jsonPath("$").value(aMapWithSize(3)));
     }
 
     @Test
@@ -266,4 +269,26 @@ class LoginSecurityTest {
                 .andExpect(status().isOk())
                 .andExpect(authenticated().withUsername("approved-member"));
     }
+
+    @Test
+    void loginChangesPreExistingSessionId() throws Exception {
+        MockHttpSession anonymousSession = new MockHttpSession();
+        String idBeforeLogin = anonymousSession.getId();
+
+        MvcResult loginResult = mvc.perform(post("/Login_Register/process-login")
+                    .session(anonymousSession)
+                    .param("username", "approved-member")
+                    .param("password", "password")
+                    .with(csrf()))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/User/Show_Services/show_services.html"))
+                .andExpect(authenticated().withUsername("approved-member"))
+                .andReturn();
+
+        MockHttpSession sessionAfterLogin = (MockHttpSession) loginResult.getRequest().getSession(false);
+        assertNotNull(sessionAfterLogin);
+
+        assertNotEquals(idBeforeLogin , sessionAfterLogin.getId());
+    }
+
 }
