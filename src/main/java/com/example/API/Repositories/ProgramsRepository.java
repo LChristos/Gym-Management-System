@@ -64,4 +64,8 @@ public interface ProgramsRepository extends JpaRepository<Programs, Long>{ // Us
     @Modifying
     @Query("UPDATE Programs u SET u.trainer = NULL WHERE u.trainer.id = :trainerid")
     void detachTrainerFromProgram(@Param("trainerid") Long trainerid);
+
+
+    //TODO: when user create reservation with old programid
+    //TODO: when user create reservation with max people programid when it is max
 }

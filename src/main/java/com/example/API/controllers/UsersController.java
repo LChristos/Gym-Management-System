@@ -198,7 +198,6 @@ public class UsersController {
     @PostMapping("/manageservices/trainers/create")//Create new trainer
     public ResponseEntity<String> NewTrainer(@RequestBody Trainers trainer){
         if (trainersRepository == null) {
-            System.out.println("TrainersRepository is NULL!");
             return new ResponseEntity<>("Internal Server Error: Repository not initialized", HttpStatus.INTERNAL_SERVER_ERROR);
         }
         try{
