@@ -6,7 +6,6 @@ import com.example.API.controllers.UsersController;
 import com.example.API.filters.AuthenticationFilter;
 import com.example.API.models.Articles;
 import com.example.API.models.Users;
-import org.hibernate.annotations.common.reflection.XMember;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -17,26 +16,24 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.parameters.P;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ActiveProfiles("test")
@@ -71,6 +68,9 @@ public class SecurityAccessTest {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @Test
     void anonymousCannotReadAnnouncements() throws Exception {
@@ -136,6 +136,88 @@ public class SecurityAccessTest {
                     """))
             .andExpect(status().isForbidden());
         verifyNoInteractions(articlesRepository);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "USER, 403, /managearticles/create",
+            "ADMIN, 200, /managearticles/create"
+    })
+    void announcementCreationNeedsAdminRole(String authority, int expectedStatus, String endpoint) throws Exception{
+        Articles article = new Articles("title", "this is a body");
+        String jsonBody = objectMapper.writeValueAsString(article);
+        mvc.perform(post(endpoint)
+                        .with(user("member")
+                        .authorities(new SimpleGrantedAuthority(authority)))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonBody))
+                .andExpect(status().is(expectedStatus))
+                .andExpect(authenticated().withUsername("member"));
+
+        if(authority.equalsIgnoreCase("ADMIN")){
+            verify(articlesRepository).save(any(Articles.class));
+        }
+        else {
+            verifyNoInteractions(articlesRepository);
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "USER, 403, /managearticles/delete/{id}",
+            "ADMIN, 200, /managearticles/delete/{id}"
+    })
+    void announcementDeletionNeedsAdminRole(String authority, int expectedStatus, String endpoint) throws Exception{
+        Articles article = new Articles("title", "this is a body");
+        article.setId(32L);
+        mvc.perform(delete(endpoint, article.getId())
+                        .with(user("member")
+                                .authorities(new SimpleGrantedAuthority(authority)))
+                        .with(csrf()))
+                .andExpect(status().is(expectedStatus))
+                .andExpect(authenticated().withUsername("member"));
+
+        if(authority.equalsIgnoreCase("ADMIN")){
+            verify(articlesRepository).deleteById(article.getId());
+        }
+        else {
+            verifyNoInteractions(articlesRepository);
+        }
+    }
+
+
+    @ParameterizedTest
+    @CsvSource({
+            "USER, 403, /managearticles/change",
+            "ADMIN, 200, /managearticles/change"
+    })
+    void announcementChangesNeedsAdminRole(String authority, int expectedStatus, String endpoint) throws Exception{
+        Articles existArticle = new Articles("title", "this is a body");
+        existArticle.setId(12L);
+        when(articlesRepository.findById(existArticle.getId())).thenReturn(Optional.of(existArticle));
+        Articles changeArticle= new Articles("Test announcement", "Test body");
+        changeArticle.setId(12L);
+        String jsonBody = objectMapper.writeValueAsString(changeArticle);
+        mvc.perform(post(endpoint)
+                        .with(user("member")
+                                .authorities(new SimpleGrantedAuthority(authority)))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonBody))
+                .andExpect(status().is(expectedStatus))
+                .andExpect(authenticated().withUsername("member"));
+
+        if(authority.equalsIgnoreCase("ADMIN")){
+            assertEquals(changeArticle.getTitle(), existArticle.getTitle());
+            assertEquals(changeArticle.getBody(), existArticle.getBody());
+            verify(articlesRepository).save(existArticle);
+        }
+        else {
+            assertNotEquals(changeArticle.getTitle(), existArticle.getTitle());
+            assertNotEquals(changeArticle.getBody(), existArticle.getBody());
+            verifyNoInteractions(articlesRepository);
+        }
     }
 
     @ParameterizedTest
@@ -227,13 +309,12 @@ public class SecurityAccessTest {
         user.setRole("user");
         user.setAccepted(false);
         when(usersRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        MvcResult result = mvc.perform(post("/request/accepted/{id}", user.getId())
+        mvc.perform(post("/request/accepted/{id}", user.getId())
                         .with(user("approver")
                                 .authorities(new SimpleGrantedAuthority(authority)))
                         .with(csrf()))
                 .andExpect(status().is(expectedStatus))
-                .andExpect(authenticated().withUsername("approver"))
-                .andReturn();
+                .andExpect(authenticated().withUsername("approver"));
 
         assertEquals(expectedApproved, user.getAccepted());
         if (expectedApproved){

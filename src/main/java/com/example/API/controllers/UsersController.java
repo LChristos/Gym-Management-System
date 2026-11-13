@@ -382,7 +382,7 @@ public class UsersController {
     @PostMapping("/managearticles/change")//Change specific article
     public ResponseEntity<String> ChangeArticle(@RequestBody Articles article){
         Articles thearticle = ArticlesRepository.findById(article.getId()).orElseThrow(() ->
-                new NoSuchElementException("Trainer not found! "));//if the id was not found
+                new NoSuchElementException("Article not found! "));//if the id was not found
         thearticle.setTitle(article.getTitle());
         thearticle.setBody(article.getBody());
         ArticlesRepository.save(thearticle);

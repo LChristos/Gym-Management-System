@@ -6,6 +6,9 @@ import com.example.API.models.Users;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -80,8 +83,11 @@ class LoginSecurityTest {
                 .andExpect(unauthenticated());
     }
 
-    @Test
-    void unapprovedUserCannotLoginEvenWithCorrectPassword() throws Exception {
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "user")
+    void unapprovedUserCannotLoginEvenWithCorrectPassword(String role) throws Exception {
+        savedUser.setRole(role);
         savedUser.setAccepted(false);
         usersRepository.save(savedUser);
         mvc.perform(formLogin("/Login_Register/process-login")
@@ -243,7 +249,8 @@ class LoginSecurityTest {
         mvc.perform(post("/logout").session(session).with(csrf()))
                 .andExpect(status().isFound())
                 .andExpect(redirectedUrl("/User/Show_Services/show_services.html"))
-                .andExpect(unauthenticated());
+                .andExpect(unauthenticated())
+                .andExpect(cookie().maxAge("JSESSIONID", 0));
         assertTrue(session.isInvalid());
     }
 
