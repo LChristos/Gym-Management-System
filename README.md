@@ -79,6 +79,30 @@ docker exec -i gym-mysql mysql --default-character-set=utf8mb4 -u root -psecret 
 **4. Serve the frontend**
 Spring Boot serves the frontend directly from `src/main/resources/static`. With the application running, open `http://localhost:8080/Login_Register/newuser.html`. Frontend requests use root-relative URLs.
 
+**5. Run the tests (optional)**
+
+The tests use your running MySQL server with a separate database and restricted account.
+
+One-time setup, through an administrative MySQL connection:
+
+```sql
+CREATE DATABASE gymsecuritytest;
+CREATE USER 'gym_test'@'localhost' IDENTIFIED BY 'YOUR_TEST_PASSWORD';
+GRANT ALL PRIVILEGES ON gymsecuritytest.* TO 'gym_test'@'localhost';
+```
+
+Then run from the project root in PowerShell:
+
+```powershell
+$env:GYM_TEST_DB_PASSWORD = 'YOUR_TEST_PASSWORD'
+.\mvnw.cmd test
+```
+
+Replace the password placeholder in both places and keep the actual password out of Git.
+
+The tests automatically activate the `test` profile and recreate/drop tables in `gymsecuritytest`. The development database is not used.
+
+
 ## How to Use the System
 
 ### As Administrator

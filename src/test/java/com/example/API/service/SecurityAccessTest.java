@@ -15,16 +15,21 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -71,6 +76,9 @@ public class SecurityAccessTest {
 
     @Autowired
     ObjectMapper objectMapper;
+
+    @MockitoSpyBean
+    UsersController usersController;
 
     @Test
     void anonymousCannotReadAnnouncements() throws Exception {
@@ -358,5 +366,36 @@ public class SecurityAccessTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(unauthenticated());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "USER, 403",
+            "ADMIN, 200"
+    })
+    void imageUploadRequiresAdmin(String authority, int expectedStatus) throws Exception{
+        doReturn(ResponseEntity.ok(Map.of("imageUrl", "/Images/test-upload.jpg"))).when(usersController).upload_image(any(MultipartFile.class));
+
+        MockMultipartFile image;
+        try (var input = getClass().getResourceAsStream("/fixtures/crossfit.jpg")){
+            assertNotNull(input);
+
+            image = new MockMultipartFile("image", "crossfit.jpg", "image/jpeg", input);
+        }
+
+        mvc.perform(multipart("/uploadimage").file(image)
+                .with(user("uploader")
+                        .authorities(new SimpleGrantedAuthority(authority)))
+                .with(csrf()))
+                .andExpect(status().is(expectedStatus))
+                .andExpect(authenticated().withUsername("uploader"));
+
+        if (authority.equalsIgnoreCase("ADMIN")){
+            verify(usersController).upload_image(any(MultipartFile.class));
+        }
+        else {
+            verify(usersController, never()).upload_image(any(MultipartFile.class));
+        }
+
     }
 }
