@@ -16,6 +16,8 @@ import com.example.API.dto.ReservationDTO;
 import com.example.API.dto.UsersDTO;
 import com.example.API.models.*;
 import com.example.API.Repositories.*;
+import com.example.API.service.DuplicateReservationException;
+import com.example.API.service.ReservationService;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -42,15 +44,18 @@ public class UsersController {
 
     private final ReservationsRepository reservationsRepository;
 
+    private final ReservationService reservationService;
+
     private final PasswordEncoder encoder;
     public UsersController(UsersRepository usersRepository, TrainersRepository trainersRepository, ServicesRepository servicesRepository,
-                           ProgramsRepository programsRepository, ArticlesRepository articlesRepository, ReservationsRepository reservationsRepository, PasswordEncoder passwordEncoder){
+                           ProgramsRepository programsRepository, ArticlesRepository articlesRepository, ReservationsRepository reservationsRepository, PasswordEncoder passwordEncoder, ReservationService reservationService){
         this.UsersRepository = usersRepository;
         this.trainersRepository = trainersRepository;
         this.ServicesRepository = servicesRepository;
         this.ProgramsRepository = programsRepository;
         this.ArticlesRepository = articlesRepository;
         this.reservationsRepository = reservationsRepository;
+        this.reservationService = reservationService;
         this.encoder = passwordEncoder;
     }
     // ---------- DTO <-> Entity mapping helpers (Programs) ----------
@@ -435,13 +440,14 @@ public class UsersController {
 
     @PostMapping("/reservations/create")//Create new reservation
     public ResponseEntity<String> NewReservation(@RequestBody ReservationDTO resDto , @AuthenticationPrincipal UserPrincipal userPrincipal){
-        UserReservations res = newReservationFromDTO(resDto , userPrincipal.getId());
-        reservationsRepository.save(res);
-        Programs theprogram = res.getProgram();
-        theprogram.addpeople();
-        ProgramsRepository.save(theprogram);
-        return new ResponseEntity<>("Reservation submitted" , HttpStatus.OK);
-    }
+        try{
+            reservationService.createReservation(userPrincipal.getId(), resDto.getProgramid());
+            return ResponseEntity.ok("Reservation submitted");
+        } catch (DuplicateReservationException exception) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(exception.getMessage());
+        }
+   }
 
     @DeleteMapping("/reservations/delete/{programid}")//Cancel the specific reservation
     public ResponseEntity<String> DeleteReservation(@PathVariable Long programid, @AuthenticationPrincipal UserPrincipal userPrincipal){

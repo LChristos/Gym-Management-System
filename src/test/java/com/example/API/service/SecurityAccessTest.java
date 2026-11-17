@@ -46,7 +46,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({
         SecurityConfig.class,
         MyUserDetailsService.class,
-        AuthenticationFilter.class
+        AuthenticationFilter.class,
+        ReservationService.class
 })
 public class SecurityAccessTest {
 
