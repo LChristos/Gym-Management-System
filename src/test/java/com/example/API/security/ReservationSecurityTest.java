@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -147,6 +148,9 @@ public class ReservationSecurityTest {
                 .andExpect(authenticated().withUsername("owner-member"));
 
         assertEquals(List.of(program.getId()), reservationsRepository.findAllProgramidFromUser(memberB.getId()));
+        Optional<Programs> savedProgram = programsRepository.findById(program.getId());
+        assertTrue(savedProgram.isPresent());
+        assertEquals(1 , savedProgram.get().getPeoplereserve());
     }
 
     @Test
@@ -154,7 +158,7 @@ public class ReservationSecurityTest {
         UserReservations res = new UserReservations(program,memberB);
         res = reservationsRepository.save(res);
         program.addpeople();
-        programsRepository.save(program);
+        program = programsRepository.save(program);
 
         mvc.perform(delete("/reservations/delete/{programid}", program.getId())
                         .with(user(new UserPrincipal(memberB)))
@@ -164,6 +168,9 @@ public class ReservationSecurityTest {
 
         assertTrue(reservationsRepository.findAllProgramidFromUser(memberB.getId()).isEmpty());
         assertFalse(reservationsRepository.existsById(res.getId()));
+        Optional<Programs> savedProgram = programsRepository.findById(program.getId());
+        assertTrue(savedProgram.isPresent());
+    assertEquals(0 , savedProgram.get().getPeoplereserve());
     }
 
     @ParameterizedTest

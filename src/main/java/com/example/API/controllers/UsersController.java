@@ -14,8 +14,10 @@ import java.io.IOException;
 import com.example.API.dto.ProgramDTO;
 import com.example.API.dto.ReservationDTO;
 import com.example.API.dto.UsersDTO;
-import com.example.API.exceptions.ProgramExpiredException;
-import com.example.API.exceptions.ProgramFullException;
+import com.example.API.exceptions.programs.ProgramExpiredException;
+import com.example.API.exceptions.programs.ProgramFullException;
+import com.example.API.exceptions.reservations.ReservationDeletionExpiredException;
+import com.example.API.exceptions.reservations.ReservationEmptyException;
 import com.example.API.models.*;
 import com.example.API.Repositories.*;
 import com.example.API.exceptions.DuplicateReservationException;
@@ -448,33 +450,21 @@ public class UsersController {
         } catch (DuplicateReservationException | ProgramFullException | ProgramExpiredException exception) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(exception.getMessage());
+        } catch (NoSuchElementException exception){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
         }
     }
 
     @DeleteMapping("/reservations/delete/{programid}")//Cancel the specific reservation
     public ResponseEntity<String> DeleteReservation(@PathVariable Long programid, @AuthenticationPrincipal UserPrincipal userPrincipal){
-        UserReservations thereservation = reservationsRepository.findByUser_IdAndProgram_IdOrderByCreatedAtDesc(userPrincipal.getId(), programid);
-        if (thereservation == null) {
-            return new ResponseEntity<>("Reservation not found", HttpStatus.NOT_FOUND);
+        try {
+            reservationService.deleteReservation(userPrincipal.getId(), programid);
+            return new ResponseEntity<>("Reservation deleted!" , HttpStatus.OK);
+        }catch (ReservationEmptyException | NoSuchElementException exception){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+        }catch (ReservationDeletionExpiredException exception){
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
         }
-        LocalDate today = LocalDate.now();
-        Programs theprogram = ProgramsRepository.findById(thereservation.getProgram().getId()).orElseThrow(() ->
-                new NoSuchElementException("Trainer not found! "));//if the id was not found
-        LocalDate program_date = theprogram.getProgramdate();
-        if(program_date.isBefore(today)){
-            return new ResponseEntity<>("Δεν μπορεί να διαγραφεί η κράτηση" , HttpStatus.BAD_REQUEST);
-        }
-        if (program_date.equals(today)) {
-            LocalTime program_time = theprogram.getHour();
-            LocalTime now_plus2 = LocalTime.now().plusHours(2);
-            if (program_time.isBefore(now_plus2)){
-                return new ResponseEntity<>("Δεν μπορεί να διαγραφεί η κράτηση" , HttpStatus.BAD_REQUEST);
-            }
-        }
-        reservationsRepository.deleteById(thereservation.getId());
-        theprogram.removepeople();
-        ProgramsRepository.save(theprogram);
-        return new ResponseEntity<>("Επυτιχής διαγραφή κράτησης" , HttpStatus.OK);
     }
 
     //B.3

@@ -26,10 +26,10 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -258,5 +258,48 @@ public class ReservationRulesTest {
                 .andExpect(authenticated().withUsername("owner-member"));
 
         assertEquals(List.of(),reservationsRepository.findAllProgramidFromUser(memberA.getId()));
+    }
+
+    @Test
+    void userCannotDeleteTheReservation() throws Exception{
+        program.setHour(LocalTime.now().plusMinutes(50));
+        program.setProgramdate(LocalDate.now());
+        program.addpeople();
+        program = programsRepository.save(program);
+        UserReservations reservations = new UserReservations(program, memberA);
+        reservationsRepository.save(reservations);
+
+
+        mvc.perform(delete("/reservations/delete/{programid}", program.getId())
+                        .with(user(new UserPrincipal(memberA)))
+                        .with(csrf()))
+                .andExpect(status().isConflict())
+                .andExpect(authenticated().withUsername("owner-member"));
+
+        assertEquals((List.of(program.getId())), reservationsRepository.findAllProgramidFromUser(memberA.getId()));
+    }
+
+    @Test
+    void reservationDeletionRollsBack() {
+        program.addpeople();
+        program = programsRepository.save(program);
+        UserReservations reservations = new UserReservations(program, memberA);
+        reservationsRepository.save(reservations);
+
+        doThrow(new IllegalStateException("Counter save failed")).when(programsRepository).save(any(Programs.class));
+
+        InvalidDataAccessApiUsageException failure = assertThrows(InvalidDataAccessApiUsageException.class,
+                () -> reservationService.deleteReservation(
+                        memberA.getId(),
+                        program.getId()));
+
+        assertInstanceOf(IllegalStateException.class , failure.getCause());
+        assertEquals("Counter save failed", failure.getCause().getMessage());
+
+        assertEquals(List.of(program.getId()), reservationsRepository.findAllProgramidFromUser(memberA.getId()));
+        Optional<Programs> serverProgram = programsRepository.findById(program.getId());
+        assertTrue(serverProgram.isPresent());
+        assertEquals(1, serverProgram.get().getPeoplereserve());
+
     }
 }
