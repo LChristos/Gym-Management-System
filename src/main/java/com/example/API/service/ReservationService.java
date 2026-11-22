@@ -36,7 +36,7 @@ public class ReservationService {
 
     @Transactional
     public void createReservation(Long userId , Long programId) {
-        Programs program = programsRepository.findById(programId).orElseThrow(() ->
+        Programs program = programsRepository.findByIdForUpdate(programId).orElseThrow(() ->
                 new NoSuchElementException("Program not found with id: " + programId));
         Users user = usersRepository.findById(userId).orElseThrow(() ->
                 new NoSuchElementException("User not found with id: " + userId));
@@ -64,12 +64,13 @@ public class ReservationService {
 
     @Transactional
     public void deleteReservation(Long userId , Long programId){
+        Programs program= programsRepository.findByIdForUpdate(programId).orElseThrow(() ->
+                new NoSuchElementException("Program not found! "));
+
         UserReservations theReservation = reservationsRepository.findByUser_IdAndProgram_IdOrderByCreatedAtDesc(userId, programId);
         if (theReservation == null) {
             throw new ReservationEmptyException("There is not a reservation for the specific user and program!");
         }
-        Programs program= programsRepository.findById(theReservation.getProgram().getId()).orElseThrow(() ->
-                new NoSuchElementException("Program not found! "));
 
         LocalDateTime now= LocalDateTime.now();
         LocalDateTime deadline = program.getProgramdate().atTime(program.getHour()).minusHours(2);

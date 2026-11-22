@@ -1,7 +1,9 @@
 package com.example.API.Repositories;
 
 import com.example.API.models.Programs;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,9 +11,14 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProgramsRepository extends JpaRepository<Programs, Long>{ // Use String for the ID type
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("Select p FROM Programs p WHERE p.id= :id")
+    Optional<Programs> findByIdForUpdate(@Param("id") Long id);
+
     //Find all the available reservations from today and after.
     @Query("Select u FROM Programs u WHERE u.programdate >= :date AND u.max_people > u.peoplereserve ORDER BY u.programdate ASC")
     List<Programs> findReservationsAvailable(@Param("date") LocalDate today);

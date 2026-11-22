@@ -6,18 +6,20 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reservations")
+@Table(name = "reservations",
+    uniqueConstraints = @UniqueConstraint(name = "uc_reservations_user_program",
+                                        columnNames = {"user_id", "program_id"}))
 public class UserReservations {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // FK -> program.id  (was: private Long programid;)
+    // FK -> program.id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "program_id", nullable = false)
     private Programs program;
 
-    // FK -> users.id  (was: private Long userid;)
+    // FK -> users.id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;

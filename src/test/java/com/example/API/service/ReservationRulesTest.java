@@ -2,6 +2,7 @@ package com.example.API.service;
 
 import com.example.API.Repositories.*;
 import com.example.API.dto.ReservationDTO;
+import com.example.API.exceptions.programs.ProgramFullException;
 import com.example.API.models.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -301,5 +304,52 @@ public class ReservationRulesTest {
         assertTrue(serverProgram.isPresent());
         assertEquals(1, serverProgram.get().getPeoplereserve());
 
+    }
+
+    @Test
+    void databaseRejectsDuplicateMemberProgramPair() {
+        UserReservations reservation = new UserReservations(program, memberA);
+        reservationService.createReservation(memberA.getId() , program.getId());
+
+        assertThrows(DataIntegrityViolationException.class,
+                () -> reservationsRepository.save(reservation));
+
+        assertEquals(List.of(program.getId()), reservationsRepository.findAllProgramidFromUser(memberA.getId()));
+        assertEquals(1, reservationsRepository.count());
+    }
+
+    private boolean attemptBooking(Long userId , Long programId , CountDownLatch ready , CountDownLatch start) throws InterruptedException {
+        ready.countDown();
+        if (!start.await(5,TimeUnit.SECONDS)){
+            throw new IllegalStateException("Start signal was not received");
+        }
+        try {
+            reservationService.createReservation(userId, programId);
+            return true;
+        }catch (ProgramFullException exception){
+            return false;
+        }
+    }
+    @Test
+    void concurrentBookingAttemptsRespectCapacity() throws ExecutionException, InterruptedException {
+        program.setMax_people(1);
+        program = programsRepository.save(program);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        CountDownLatch ready = new CountDownLatch(2);
+        CountDownLatch start = new CountDownLatch(1);
+        Future<Boolean> first = executor.submit(() -> attemptBooking(memberA.getId(),program.getId(), ready , start));
+        Future<Boolean> second = executor.submit(() -> attemptBooking(memberB.getId(),program.getId(), ready , start));
+        assertTrue(ready.await(5, TimeUnit.SECONDS), "Both workers should become ready");
+        start.countDown();
+        boolean firstValue = first.get().booleanValue();
+        boolean secondValue = second.get().booleanValue();
+
+        assertNotEquals(firstValue, secondValue, "Exactly one booking should succeed");
+        Long winnerId = firstValue ? memberA.getId() : memberB.getId();
+        Long loserId =  firstValue ? memberB.getId() : memberA.getId();
+        assertEquals(List.of(program.getId()),reservationsRepository.findAllProgramidFromUser(winnerId));
+        assertTrue(reservationsRepository.findAllProgramidFromUser(loserId).isEmpty());
+        Programs savedProgram = programsRepository.findById(program.getId()).orElseThrow();
+        assertEquals(1 , savedProgram.getPeoplereserve());
     }
 }
