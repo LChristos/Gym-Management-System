@@ -14,9 +14,11 @@ import java.io.IOException;
 import com.example.API.dto.ProgramDTO;
 import com.example.API.dto.ReservationDTO;
 import com.example.API.dto.UsersDTO;
+import com.example.API.exceptions.ProgramExpiredException;
+import com.example.API.exceptions.ProgramFullException;
 import com.example.API.models.*;
 import com.example.API.Repositories.*;
-import com.example.API.service.DuplicateReservationException;
+import com.example.API.exceptions.DuplicateReservationException;
 import com.example.API.service.ReservationService;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
@@ -443,11 +445,11 @@ public class UsersController {
         try{
             reservationService.createReservation(userPrincipal.getId(), resDto.getProgramid());
             return ResponseEntity.ok("Reservation submitted");
-        } catch (DuplicateReservationException exception) {
+        } catch (DuplicateReservationException | ProgramFullException | ProgramExpiredException exception) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(exception.getMessage());
         }
-   }
+    }
 
     @DeleteMapping("/reservations/delete/{programid}")//Cancel the specific reservation
     public ResponseEntity<String> DeleteReservation(@PathVariable Long programid, @AuthenticationPrincipal UserPrincipal userPrincipal){
