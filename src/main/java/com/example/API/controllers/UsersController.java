@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,6 +16,7 @@ import com.example.API.dto.ReservationDTO;
 import com.example.API.dto.UsersDTO;
 import com.example.API.exceptions.programs.ProgramExpiredException;
 import com.example.API.exceptions.programs.ProgramFullException;
+import com.example.API.exceptions.programs.ProgramCapacityTooLowException;
 import com.example.API.exceptions.reservations.ReservationDeletionExpiredException;
 import com.example.API.exceptions.reservations.ReservationEmptyException;
 import com.example.API.models.*;
@@ -27,7 +29,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -348,6 +349,8 @@ public class UsersController {
             return ResponseEntity.ok("Program successfully updated");
         }catch (NoSuchElementException exception){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+        }catch (ProgramCapacityTooLowException exception){
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(exception.getMessage());
         }
     }
 
@@ -415,12 +418,13 @@ public class UsersController {
     public ResponseEntity<List<ProgramDTO>> ShowAllAvailableRes(@AuthenticationPrincipal UserPrincipal userPrincipal){
         List<Programs> availablePrograms;
         LocalDate today = LocalDate.now();
+        LocalTime time = LocalTime.now();
         List<Long> userReservationsId = reservationsRepository.findAllProgramidFromUser(userPrincipal.getId());
         if(userReservationsId.isEmpty()){
-            availablePrograms = ProgramsRepository.findReservationsAvailable(today);
+            availablePrograms = ProgramsRepository.findReservationsAvailable(today, time);
         }
         else{
-            availablePrograms = ProgramsRepository.findReservationsAvailableWithoutUserid(today,userReservationsId);
+            availablePrograms = ProgramsRepository.findReservationsAvailableWithoutUserid(today,userReservationsId, time);
         }
         return new ResponseEntity<>(toProgramDTOList(availablePrograms), HttpStatus.OK);
     }
