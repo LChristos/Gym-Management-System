@@ -365,7 +365,7 @@ function display_programs(programs) {
                 <input type="number" name="services_max_people" class="program-max-people">
             </td>
             <td>
-                <input type="number" name="peoplereserve" class="program-reservations">
+                <input type="number" name="peoplereserve" class="program-reservations" disabled>
             </td>
             <td>
                 <button type="submit" class="change-program">Change</button>

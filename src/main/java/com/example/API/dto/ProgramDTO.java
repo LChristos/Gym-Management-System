@@ -15,7 +15,6 @@ public class ProgramDTO {
     private LocalTime hour;
     private Long trainer_id;
     private int max_people;
-    private int peoplereserve;
 
     public ProgramDTO() {
     }
@@ -66,13 +65,5 @@ public class ProgramDTO {
 
     public void setMax_people(int max_people) {
         this.max_people = max_people;
-    }
-
-    public int getPeoplereserve() {
-        return peoplereserve;
-    }
-
-    public void setPeoplereserve(int peoplereserve) {
-        this.peoplereserve = peoplereserve;
     }
 }
