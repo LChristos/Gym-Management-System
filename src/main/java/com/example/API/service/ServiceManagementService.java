@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -29,11 +30,12 @@ public class ServiceManagementService {
         Services service = servicesRepository.findByIdForUpdate(id).orElseThrow(
                 () -> new NoSuchElementException("Service not found!"));
         LocalDate date = LocalDate.now();
-        List<Long> program_ids = programsRepository.findByServiceIdAndProgramdateGreaterThanEqual(date, id);
+        LocalTime time = LocalTime.now();
+        List<Long> program_ids = programsRepository.findByServiceIdAndProgramdateGreaterThanEqual(date, id, time);
         if (!program_ids.isEmpty()){
             reservationsRepository.deleteAllReservationsFromPrograms(program_ids);
         }
-        programsRepository.deleteByService_IdFuturePrograms(date ,id);
+        programsRepository.deleteByService_IdFuturePrograms(date ,id, time);
         programsRepository.detachServiceFromProgram(id);
         servicesRepository.deleteById(id);
 
