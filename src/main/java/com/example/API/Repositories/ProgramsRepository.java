@@ -14,13 +14,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ProgramsRepository extends JpaRepository<Programs, Long>{ // Use String for the ID type
+public interface ProgramsRepository extends JpaRepository<Programs, Long>{
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("Select p FROM Programs p WHERE p.id= :id")
+    @Query("SELECT p FROM Programs p WHERE p.id= :id")
     Optional<Programs> findByIdForUpdate(@Param("id") Long id);
 
     //Find all the available reservations from today and after.
-    @Query("Select u FROM Programs u WHERE u.programdate >= :date AND u.max_people > u.peoplereserve ORDER BY u.programdate ASC")
+    @Query("SELECT u FROM Programs u WHERE u.programdate >= :date AND u.max_people > u.peoplereserve ORDER BY u.programdate ASC")
     List<Programs> findReservationsAvailable(@Param("date") LocalDate today);
 
     //Find all the program of this week.
@@ -38,7 +38,7 @@ public interface ProgramsRepository extends JpaRepository<Programs, Long>{ // Us
     List<Programs> findReservationsAvailableWithoutUserid(@Param("date") LocalDate date, @Param("id") List<Long> programid);
 
     //Find all the programs that the user has made a reservation and are today and after
-    @Query("Select u FROM Programs u WHERE u.programdate > :date AND u.id IN :id ORDER BY u.programdate ASC")
+    @Query("Select u FROM Programs u WHERE u.programdate >= :date AND u.id IN :id ORDER BY u.programdate ASC")
     List<Programs> findFutureReservationsForUserid(@Param("date") LocalDate date, @Param("id") List<Long> programid);
 
     //Find all the programs that the user has made a reservation
@@ -72,7 +72,8 @@ public interface ProgramsRepository extends JpaRepository<Programs, Long>{ // Us
     @Query("UPDATE Programs u SET u.trainer = NULL WHERE u.trainer.id = :trainerid")
     void detachTrainerFromProgram(@Param("trainerid") Long trainerid);
 
-
-    //TODO: when user create reservation with old programid
-    //TODO: when user create reservation with max people programid when it is max
+    //Remove from the Programs one from peoplereserve
+    @Modifying
+    @Query("UPDATE Programs p SET p.peoplereserve = p.peoplereserve -1 WHERE p.id IN :id")
+    void decreasePeoplereserveFromPrograms(@Param("id") List<Long> id);
 }
