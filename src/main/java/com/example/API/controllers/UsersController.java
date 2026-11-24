@@ -86,6 +86,7 @@ public class UsersController {
         dto.setHour(p.getHour());
         dto.setTrainer_id(p.getTrainer() != null ? p.getTrainer().getId() : null);
         dto.setMax_people(p.getMax_people());
+        dto.setPeoplereserve(p.getPeoplereserve());
         return dto;
     }
 
