@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
@@ -28,6 +29,7 @@ import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -67,6 +69,9 @@ public class ReservationRulesTest {
 
     @Autowired
     ReservationService reservationService;
+
+    @Autowired
+    UserManagementService userManagementService;
 
     private Users memberA;
     private Users memberB;
@@ -331,18 +336,23 @@ public class ReservationRulesTest {
         }
     }
     @Test
-    void concurrentBookingAttemptsRespectCapacity() throws ExecutionException, InterruptedException {
+    void concurrentBookingAttemptsRespectCapacity() throws ExecutionException, InterruptedException{
         program.setMax_people(1);
         program = programsRepository.save(program);
-        ExecutorService executor = Executors.newFixedThreadPool(2);
-        CountDownLatch ready = new CountDownLatch(2);
-        CountDownLatch start = new CountDownLatch(1);
-        Future<Boolean> first = executor.submit(() -> attemptBooking(memberA.getId(),program.getId(), ready , start));
-        Future<Boolean> second = executor.submit(() -> attemptBooking(memberB.getId(),program.getId(), ready , start));
-        assertTrue(ready.await(5, TimeUnit.SECONDS), "Both workers should become ready");
-        start.countDown();
-        boolean firstValue = first.get().booleanValue();
-        boolean secondValue = second.get().booleanValue();
+        CountDownLatch ready;
+        CountDownLatch start;
+        Future<Boolean> first;
+        Future<Boolean> second;
+        try (ExecutorService executor = Executors.newFixedThreadPool(2)) {
+            ready = new CountDownLatch(2);
+            start = new CountDownLatch(1);
+            first = executor.submit(() -> attemptBooking(memberA.getId(), program.getId(), ready, start));
+            second = executor.submit(() -> attemptBooking(memberB.getId(), program.getId(), ready, start));
+            assertTrue(ready.await(5, TimeUnit.SECONDS), "Both workers should become ready");
+            start.countDown();
+        }
+        boolean firstValue = first.get();
+        boolean secondValue = second.get();
 
         assertNotEquals(firstValue, secondValue, "Exactly one booking should succeed");
         Long winnerId = firstValue ? memberA.getId() : memberB.getId();
@@ -351,5 +361,50 @@ public class ReservationRulesTest {
         assertTrue(reservationsRepository.findAllProgramidFromUser(loserId).isEmpty());
         Programs savedProgram = programsRepository.findById(program.getId()).orElseThrow();
         assertEquals(1 , savedProgram.getPeoplereserve());
+    }
+
+    @Test
+    void deletingMemberRemovesTheirBookingsAndPreservesOtherMembers() throws Exception{
+        UserReservations res1 = new UserReservations(program, memberA);
+        UserReservations res2 = new UserReservations(program, memberB);
+        reservationService.createReservation(memberA.getId() , program.getId());
+        reservationService.createReservation(memberB.getId() , program.getId());
+
+        mvc.perform(delete("/manageusers/delete/{id}" , memberA.getId())
+                .with(user("admin")
+                        .authorities(new SimpleGrantedAuthority("ADMIN")))
+                .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(authenticated().withUsername("admin"));
+
+        assertFalse(usersRepository.existsById(memberA.getId()));
+        assertEquals(List.of(), reservationsRepository.findByUser_Id(memberA.getId()));
+        assertEquals(List.of(program.getId()), reservationsRepository.findAllProgramidFromUser(memberB.getId()));
+        Optional<Programs> savedProgram = programsRepository.findById(program.getId());
+        assertTrue(savedProgram.isPresent());
+        assertEquals(1, savedProgram.get().getPeoplereserve());
+
+    }
+
+    @Test
+    void userDeletionRollback() throws Exception{
+        UserReservations res1 = new UserReservations(program, memberA);
+        UserReservations res2 = new UserReservations(program, memberB);
+        reservationService.createReservation(memberA.getId() , program.getId());
+        reservationService.createReservation(memberB.getId() , program.getId());
+
+        doThrow(new IllegalStateException("Counter decreasing failed")).when(programsRepository).decreasePeoplereserveFromPrograms(anyList());
+
+        InvalidDataAccessApiUsageException failure = assertThrows(InvalidDataAccessApiUsageException.class,
+                () -> userManagementService.deleteUserData(memberA.getId()));
+
+        assertInstanceOf(IllegalStateException.class , failure.getCause());
+        assertEquals("Counter decreasing failed", failure.getCause().getMessage());
+
+        assertTrue(usersRepository.existsById(memberA.getId()));
+        assertEquals(List.of(program.getId()), reservationsRepository.findAllProgramidFromUser(memberA.getId()));
+        Optional<Programs> savedProgram = programsRepository.findById(program.getId());
+        assertTrue(savedProgram.isPresent());
+        assertEquals(2, savedProgram.get().getPeoplereserve());
     }
 }

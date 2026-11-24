@@ -11,14 +11,10 @@ import com.example.API.exceptions.reservations.ReservationEmptyException;
 import com.example.API.models.Programs;
 import com.example.API.models.UserReservations;
 import com.example.API.models.Users;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.NoSuchElementException;
 
 @Service
@@ -36,10 +32,10 @@ public class ReservationService {
 
     @Transactional
     public void createReservation(Long userId , Long programId) {
+        Users user = usersRepository.findByIdForUpdate(userId).orElseThrow(() ->
+                new NoSuchElementException("User not found with id: " + userId));
         Programs program = programsRepository.findByIdForUpdate(programId).orElseThrow(() ->
                 new NoSuchElementException("Program not found with id: " + programId));
-        Users user = usersRepository.findById(userId).orElseThrow(() ->
-                new NoSuchElementException("User not found with id: " + userId));
         UserReservations res = new UserReservations(program, user);
 
         //If there is already a reservation for this user in the specific program
@@ -64,6 +60,8 @@ public class ReservationService {
 
     @Transactional
     public void deleteReservation(Long userId , Long programId){
+        Users user = usersRepository.findByIdForUpdate(userId).orElseThrow(() ->
+                new NoSuchElementException("User not found with id: " + userId));
         Programs program= programsRepository.findByIdForUpdate(programId).orElseThrow(() ->
                 new NoSuchElementException("Program not found! "));
 

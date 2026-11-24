@@ -5,6 +5,7 @@ import com.example.API.config.SecurityConfig;
 import com.example.API.controllers.UsersController;
 import com.example.API.filters.AuthenticationFilter;
 import com.example.API.models.Articles;
+import com.example.API.models.Programs;
 import com.example.API.models.Users;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -47,7 +48,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         SecurityConfig.class,
         MyUserDetailsService.class,
         AuthenticationFilter.class,
-        ReservationService.class
+        ReservationService.class,
+        UserManagementService.class,
+        ServiceManagementService.class,
+        ProgramManagementService.class,
+        TrainerManagementService.class
 })
 public class SecurityAccessTest {
 

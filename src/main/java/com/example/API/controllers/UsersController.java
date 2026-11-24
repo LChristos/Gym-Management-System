@@ -5,7 +5,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,7 +20,7 @@ import com.example.API.exceptions.reservations.ReservationEmptyException;
 import com.example.API.models.*;
 import com.example.API.Repositories.*;
 import com.example.API.exceptions.DuplicateReservationException;
-import com.example.API.service.ReservationService;
+import com.example.API.service.*;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -50,9 +49,19 @@ public class UsersController {
 
     private final ReservationService reservationService;
 
+    private final UserManagementService userManagementService;
+
+    private final ProgramManagementService programManagementService;
+
+    private final TrainerManagementService trainerManagementService;
+
+    private final ServiceManagementService serviceManagementService;
+
     private final PasswordEncoder encoder;
     public UsersController(UsersRepository usersRepository, TrainersRepository trainersRepository, ServicesRepository servicesRepository,
-                           ProgramsRepository programsRepository, ArticlesRepository articlesRepository, ReservationsRepository reservationsRepository, PasswordEncoder passwordEncoder, ReservationService reservationService){
+                           ProgramsRepository programsRepository, ArticlesRepository articlesRepository, ReservationsRepository reservationsRepository,
+                           PasswordEncoder passwordEncoder, ReservationService reservationService, UserManagementService userManagementService,
+                           ProgramManagementService programManagementService, TrainerManagementService trainerManagementService, ServiceManagementService serviceManagementService){
         this.UsersRepository = usersRepository;
         this.trainersRepository = trainersRepository;
         this.ServicesRepository = servicesRepository;
@@ -60,6 +69,10 @@ public class UsersController {
         this.ArticlesRepository = articlesRepository;
         this.reservationsRepository = reservationsRepository;
         this.reservationService = reservationService;
+        this.userManagementService= userManagementService;
+        this.programManagementService = programManagementService;
+        this.trainerManagementService = trainerManagementService;
+        this.serviceManagementService = serviceManagementService;
         this.encoder = passwordEncoder;
     }
     // ---------- DTO <-> Entity mapping helpers (Programs) ----------
@@ -72,7 +85,6 @@ public class UsersController {
         dto.setHour(p.getHour());
         dto.setTrainer_id(p.getTrainer() != null ? p.getTrainer().getId() : null);
         dto.setMax_people(p.getMax_people());
-        dto.setPeoplereserve(p.getPeoplereserve());
         return dto;
     }
 
@@ -104,16 +116,6 @@ public class UsersController {
 
     private List<UsersDTO> toUsersDTOList(List<Users> users){
         return users.stream().map(this::toUsersDTO).collect(Collectors.toList());
-    }
-
-    // ---------- DTO <-> Entity mapping helper (Reservations) ----------
-
-    private UserReservations newReservationFromDTO(ReservationDTO dto , Long userid) {
-        Programs program = ProgramsRepository.findById(dto.getProgramid()).orElseThrow(() ->
-                new NoSuchElementException("Program not found with id: " + dto.getProgramid()));
-        Users user = UsersRepository.findById(userid).orElseThrow(() ->
-                new NoSuchElementException("User not found with id: " + userid));
-        return new UserReservations(program, user);
     }
 
     @PostMapping("/signup")//save the user in table
@@ -159,8 +161,12 @@ public class UsersController {
 
     @DeleteMapping("/request/denied/{id}")//Delete the user from the request section and the table
     public ResponseEntity<String> RejectUser(@PathVariable Long id){
-        UsersRepository.deleteById(id);
-        return new ResponseEntity<>("User rejected and deleted successfully", HttpStatus.OK);
+        try {
+            userManagementService.deleteUserData(id);
+            return new ResponseEntity<>("User rejected and deleted successfully" , HttpStatus.OK);
+        }catch (NoSuchElementException exception){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+        }
     }
 
     @GetMapping("/manageusers")//Show all the users that are accepted
@@ -187,9 +193,12 @@ public class UsersController {
 
     @DeleteMapping("/manageusers/delete/{id}")//Delete the user
     public ResponseEntity<String> DeleteUser(@PathVariable Long id){
-        reservationsRepository.deleteByUser_Id(id);
-        UsersRepository.deleteById(id);
-        return new ResponseEntity<>("User deleted successfully" , HttpStatus.OK);
+        try {
+            userManagementService.deleteUserData(id);
+            return new ResponseEntity<>("User deleted successfully" , HttpStatus.OK);
+        }catch (NoSuchElementException exception){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+        }
     }
     //Admin Services
 //Trainers
@@ -229,18 +238,14 @@ public class UsersController {
         return new ResponseEntity<>("Trainer successfully updated" , HttpStatus.OK);
     }
 
-    @Transactional
     @DeleteMapping("/manageservices/trainers/delete/{id}")//Delete trainer
     public ResponseEntity<String> DeleteTrainer(@PathVariable Long id){
-        LocalDate date = LocalDate.now();
-        List<Long> program_ids = ProgramsRepository.findByTrainerIdAndProgramdateGreaterThanEqual(date, id);
-        if (!program_ids.isEmpty()){
-            reservationsRepository.deleteAllReservationsFromPrograms(program_ids);
+        try {
+            trainerManagementService.deleteTrainerData(id);
+            return new ResponseEntity<>("Trainer deleted successfully" , HttpStatus.OK);
+        }catch (NoSuchElementException exception){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
         }
-        ProgramsRepository.deleteByTrainer_IdFuturePrograms(date ,id);
-        ProgramsRepository.detachTrainerFromProgram(id);
-        trainersRepository.deleteById(id);
-        return new ResponseEntity<>("Trainer deleted successfully" , HttpStatus.OK);
     }
     //Services
     @GetMapping("/manageservices/services")//Show all the gym's programms
@@ -296,18 +301,14 @@ public class UsersController {
         return new ResponseEntity<>("Service successfully updated" , HttpStatus.OK);
     }
 
-    @Transactional
     @DeleteMapping("/manageservices/services/delete/{id}")//Delete service
     public ResponseEntity<String> DeleteService(@PathVariable Long id){
-        LocalDate date = LocalDate.now();
-        List<Long> program_ids = ProgramsRepository.findByServiceIdAndProgramdateGreaterThanEqual(date, id);
-        if (!program_ids.isEmpty()){
-            reservationsRepository.deleteAllReservationsFromPrograms(program_ids);
+        try {
+            serviceManagementService.deleteServiceData(id);
+            return new ResponseEntity<>("Service deleted successfully" , HttpStatus.OK);
+        }catch (NoSuchElementException exception){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
         }
-        ProgramsRepository.deleteByService_IdFuturePrograms(date ,id);
-        ProgramsRepository.detachServiceFromProgram(id);
-        ServicesRepository.deleteById(id);
-        return new ResponseEntity<>("Service deleted successfully" , HttpStatus.OK);
     }
     //Schedule of services
     @GetMapping("/manageservices/program")//Show all the programs
@@ -342,26 +343,22 @@ public class UsersController {
 
     @PostMapping("/manageservices/program/change")//Change elements of the program
     public ResponseEntity<String>  ChangeProgram(@RequestBody ProgramDTO programDto){
-        Programs theprogram = ProgramsRepository.findById(programDto.getId()).orElseThrow(() ->
-                new NoSuchElementException("Program not found! "));//if the id was not found
-        Services service = ServicesRepository.findById(programDto.getServices_name()).orElseThrow(() ->
-                new NoSuchElementException("Service not found with id: " + programDto.getServices_name()));
-        Trainers trainer = trainersRepository.findById(programDto.getTrainer_id()).orElseThrow(() ->
-                new NoSuchElementException("Trainer not found with id: " + programDto.getTrainer_id()));
-        theprogram.setService(service);
-        theprogram.setHour(programDto.getHour());
-        theprogram.setMax_people(programDto.getMax_people());
-        theprogram.setProgramdate(programDto.getProgramdate());
-        theprogram.setTrainer(trainer);
-        ProgramsRepository.save(theprogram);
-        return new ResponseEntity<>("Program successfully updated" , HttpStatus.OK);
+        try {
+            programManagementService.changeProgramData(programDto);
+            return ResponseEntity.ok("Program successfully updated");
+        }catch (NoSuchElementException exception){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+        }
     }
 
     @DeleteMapping("/manageservices/program/delete/{id}")//Delete specific part of the program
     public ResponseEntity<String> DeleteProgram(@PathVariable("id") Long id){
-        reservationsRepository.deleteByProgram_Id(id);
-        ProgramsRepository.deleteById(id);
-        return new ResponseEntity<>("the specific schedule deleted successfully" , HttpStatus.OK);
+        try {
+            programManagementService.deleteProgramData(id);
+            return new ResponseEntity<>("the specific schedule deleted successfully" , HttpStatus.OK);
+        }catch (NoSuchElementException exception){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+        }
     }
     //Announcements and Discounts
     @GetMapping("/managearticles")//Show all the articles and the discounts
