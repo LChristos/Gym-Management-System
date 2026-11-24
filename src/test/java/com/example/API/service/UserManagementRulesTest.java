@@ -1,11 +1,7 @@
 package com.example.API.service;
 
 import com.example.API.Repositories.*;
-import com.example.API.exceptions.DuplicateReservationException;
-import com.example.API.exceptions.programs.ProgramExpiredException;
-import com.example.API.exceptions.programs.ProgramFullException;
 import com.example.API.models.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -31,13 +26,7 @@ import static  org.junit.jupiter.api.Assertions.*;
 public class UserManagementRulesTest {
 
     @Autowired
-    MockMvc mvc;
-
-    @Autowired
     ReservationsRepository reservationsRepository;
-
-    @Autowired
-    ObjectMapper objectMapper;
 
     @Autowired
     PasswordEncoder passwordEncoder;
